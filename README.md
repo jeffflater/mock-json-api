@@ -2,7 +2,7 @@
 
 NPM - Mock JSON API
 
-- Sample code
+- Sample Usage
 
 ```javascript
 var express = require('express');
