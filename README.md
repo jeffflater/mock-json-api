@@ -4,7 +4,7 @@ mock-json-api
 NPM - Mock JSON API
 
 Sample code
-...
+---javascript
 var express = require('express');
 var mock = require('mock-json-api');
 
@@ -32,4 +32,4 @@ var mockapi = mock({
 
 app.use(mockapi.registerRoutes);
 app.listen(3001);
-...
+---
