@@ -1,0 +1,32 @@
+{
+  "name": "mock-json-api",
+  "version": "0.0.1",
+  "description": "Mock json api for node",
+  "main": "mock.js",
+  "scripts": {
+    "test": "node test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/jeffflater/mock-json-api.git"
+  },
+  "keywords": [
+    "mock",
+    "json",
+    "api"
+  ],
+  "author": {
+    "name": "Jeff Flater",
+    "email": "jflater.email@gmail.com"
+  },
+  "license": "MIT",
+  "readmeFilename": "README.md",
+  "bugs": {
+    "url": "https://github.com/jeffflater/mock-json-api/issues"
+  },
+  "homepage": "https://github.com/jeffflater/mock-json-api",
+  "devDependencies": {
+    "dummy-json": "0.0.2",
+    "json-store": "0.0.1"
+  }
+}
