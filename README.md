@@ -2,7 +2,7 @@
 
 NPM - Mock JSON API
 
-- Sample Usage
+- jsonStore
 
 ```javascript
 var express = require('express');
@@ -16,9 +16,23 @@ var mockapi = mock({
         {
             name: 'foo',
             mockRoute: '/api/foo',
-            jsonTemplate: '{ 
-                "name": {{firstName}}, 
-                "age": {{number 18 65}} 
+            jsonTemplate: '{
+                "people": [
+                    {{#repeat 2}} {
+                        "id": {{index}},
+                        "firstName": "{{firstName}}",
+                        "lastName": "{{lastName}}",
+                        "email": "{{email}}",
+                        "work": "{{company}}",
+                        "age": {{number 20 50}},
+                        "optedin": {{boolean}}
+                    } {{/repeat}}],
+                "images": [
+                    {{#repeat 3 6}}
+                        'img{{index}}.png'
+                    {{/repeat}} ],
+                "revision": {{uniqueIndex}},
+                "tolerance": {{number '0' '2'}},
             }'
         },
         {
