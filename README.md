@@ -4,6 +4,11 @@ NPM - Mock JSON API
 
 - Sample code
 
+```javascript
+var s = "JavaScript syntax highlighting";
+alert(s);
+```
+
 ...
 var express = require('express');
 var mock = require('mock-json-api');
