@@ -7,6 +7,9 @@ var dummyJson = require('dummy-json'),
 var configOptions = ['jsonStore',
                         'mockRoutes'];
 
+var routes;
+var store;
+
 function Mock(config) {
     // Validate JSON object
     if (!tryParseJSON(JSON.stringify(config))) {
@@ -20,20 +23,18 @@ function Mock(config) {
         }
     }
 
-    this.store = jsonStore(config.jsonStore);
-    this.routes = config.mockRoutes;
-
+    store = jsonStore(config.jsonStore);
+    routes = config.mockRoutes;
 }
 
 Mock.prototype.registerRoutes = function (req, res) {
 
-    for (var i = 0; i < this.routes.length; i++) {
-        if (this.routes[i].mockRoute == req.path) {
-            res.send(routeResponse(this.routes[i]));
+    for (var i = 0; i < routes.length; i++) {
+        if (routes[i].mockRoute == req.path) {
+            res.send(routeResponse(routes[i]));
             break;
         }
     }
-
     res.end();  //no routes found, end here!
 };
 
@@ -46,25 +47,20 @@ module.exports = function (config) {
 * */
 
 function routeResponse (route) {
-    var jsonTemplate = getStore(route.mockRoute);
-    if (!tryParseJSON(jsonTemplate)) {
-        setStore(route.name, rotue.jsonTemplate);
-    } else {
-        jsonTemplate = rotue.jsonTemplate;
+    var data = getStore(route.name);
+    if (data == null) {
+        data = setStore(route.name, dummyJson.parse(route.jsonTemplate));
     }
-    return renderJsonTemplate(jsonTemplate);
-}
-
-function renderJsonTemplate(jsonTemplate) {
-    return dummyJson.parse(JSON.stringify(jsonTemplate));
+    return data;
 }
 
 function getStore (key) {
-    return this.store.get(key);
+    return store.get(key);
 }
 
 function setStore (key, value) {
-    this.store.set(key, value);
+    store.set(key, value);
+    return value;
 }
 
 function tryParseJSON (jsonString){

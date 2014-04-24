@@ -1,15 +1,17 @@
 /**
  * Created by jeff.flater on 4/23/2014.
  */
+var express = require('express');
 var mock = require('./mock');
-var assert = require('assert');
+
+app = express();
 
 
-var template1 = {};
-var template2 = {};
+var template1 = '{ "name": {{firstName}}, "age": {{number 18 65}} }';
+var template2 = '{ "name": {{firstName}}, "age": {{number 18 65}} }';
 
 var mockapi = mock({
-    jsonStore: 'test',
+    jsonStore: __dirname + '/data.json',
     mockRoutes: [
         {
             name: 'foo',
@@ -24,4 +26,7 @@ var mockapi = mock({
     ]
 });
 
-// app.use(mockapi.registerRoutes);
+
+app.use(mockapi.registerRoutes);
+
+app.listen(3001);
