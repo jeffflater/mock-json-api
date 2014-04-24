@@ -16,12 +16,18 @@ var mockapi = mock({
         {
             name: 'foo',
             mockRoute: '/api/foo',
-            jsonTemplate: '{ "name": {{firstName}}, "age": {{number 18 65}} }'
+            jsonTemplate: '{ 
+                "name": {{firstName}}, 
+                "age": {{number 18 65}} 
+            }'
         },
         {
             name: 'bar',
             mockRoute: '/api/bar',
-            jsonTemplate: '{ "name": {{firstName}}, "age": {{number 18 65}} }'
+            jsonTemplate: '{ 
+                "name": {{firstName}}, 
+                "age": {{number 18 65}} 
+            }'
         }
     ]
 });
