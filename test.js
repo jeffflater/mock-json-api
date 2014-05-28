@@ -6,7 +6,6 @@ var mock = require('./mock');
 
 app = express();
 
-
 var template1 = '{ "name": {{firstName}}, "age": {{number 18 65}} }';
 var template2 = '{ "name": {{firstName}}, "age": {{number 18 65}} }';
 
@@ -25,7 +24,6 @@ var mockapi = mock({
         }
     ]
 });
-
 
 app.use(mockapi.registerRoutes);
 
