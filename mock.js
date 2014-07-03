@@ -7,12 +7,12 @@ var dummyJson = require('dummy-json'),
 var configOptions = ['jsonStore',
                         'mockRoutes'];
 
-var routes;
-var store;
+var routes,
+    store;
 
 function Mock(config) {
     // Validate JSON object
-    if (!tryParseJSON(JSON.stringify(config))) {
+    if (!_tryParseJSON(JSON.stringify(config))) {
         throw 'Invalid json config object!'
     }
 
@@ -31,7 +31,7 @@ Mock.prototype.registerRoutes = function (req, res) {
 
     for (var i = 0; i < routes.length; i++) {
         if (routes[i].mockRoute == req.path) {
-            res.send(routeResponse(routes[i]));
+            res.send(_routeResponse(routes[i]));
             break;
         }
     }
@@ -43,27 +43,52 @@ module.exports = function (config) {
 };
 
 /*
-* private methods
+* PRIVATE METHODS
 * */
 
-function routeResponse (route) {
-    var data = getStore(route.name);
-    if (data == null) {
-        data = setStore(route.name, dummyJson.parse(route.jsonTemplate));
+function _routeResponse (route) {
+
+    var response = null;
+
+    switch (route.testScope) {
+        //Simulates a successful response
+        case 'success':
+            response = _getStore(route.name);
+            if (response == null) {
+                response = _setStore(route.name, dummyJson.parse(route.jsonTemplate));
+            }
+            break;
+
+        //Simulates a bad response (404)
+        case 'fail':
+            response = 404;
+            break;
+
+        //Simulates a bad response (500)
+        case 'error':
+            response = 500;
+            break;
+
+        //Defaults to a 404 response
+        default:
+            response = 404;
+            break;
     }
-    return data;
+
+
+    return response;
 }
 
-function getStore (key) {
+function _getStore (key) {
     return store.get(key);
 }
 
-function setStore (key, value) {
+function _setStore (key, value) {
     store.set(key, value);
     return value;
 }
 
-function tryParseJSON (jsonString){
+function _tryParseJSON (jsonString){
     try {
         var o = JSON.parse(jsonString);
 
