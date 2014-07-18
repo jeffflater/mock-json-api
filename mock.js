@@ -13,13 +13,13 @@ var routes,
 function Mock(config) {
     // Validate JSON object
     if (!_tryParseJSON(JSON.stringify(config))) {
-        throw 'Invalid json config object!'
+        throw 'Invalid json config object!';
     }
 
     // Validate config options
     for (var i=0; i < configOptions.length; i++) {
         if (!config.hasOwnProperty(configOptions[i])) {
-            throw 'Missing required config options'
+            throw 'Missing required config options';
         }
     }
 
@@ -47,17 +47,20 @@ module.exports = function (config) {
 * */
 
 function _routeResponse (route) {
-
     var response = null;
+    var guid = route.name+route.testScope+route.testScenario;
 
     switch (route.testScope) {
         //Simulates a successful response
         case 'success':
-            response = _getStore(route.name);
-            if (response == null) {
-                response = _setStore(route.name, dummyJson.parse(route.jsonTemplate));
+            response = _getStore(guid);
+            if (response === null || typeof response === 'undefined') {
+                //choose function in array to return json result
+                var jsonResults = route.jsonTemplate[route.testScenario]();
+                response = _setStore(guid, dummyJson.parse(jsonResults));
             }
             break;
+
 
         //Simulates a bad response (404)
         case 'fail':
@@ -103,4 +106,4 @@ function _tryParseJSON (jsonString){
     catch (e) { }
 
     return false;
-};
+}
