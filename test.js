@@ -17,7 +17,8 @@ var mockapi = mock({
             name: 'foo',
             mockRoute: '/api/foo',
             testScope: 'success',       //success | fail | error
-            jsonTemplate: template1
+            testScenario: 1,
+            jsonTemplate: [template1, template2, template3]
         },
         {
             name: 'bar',
