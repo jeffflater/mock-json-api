@@ -6,9 +6,9 @@ var mock = require('./mock');
 
 app = express();
 
-var template1 = '{ "name": {{firstName}}, "age": {{number 18 65}} }';
-var template2 = '{ "name": {{firstName}}, "age": {{number 18 65}} }';
-var template3 = '{ "name": {{firstName}}, "age": {{number 18 65}} }';
+var template1 = function(){ return '{ "name": {{firstName}}, "age": {{number 18 65}} }' };
+var template2 = function(){ return '{ "name": {{firstName}}, "age": {{number 18 65}} }' };
+var template3 = function(){ return '{ "name": {{firstName}}, "age": {{number 18 65}} }' };
 
 var mockapi = mock({
     jsonStore: __dirname + '/data.json',
