@@ -22,9 +22,9 @@
   },
   "homepage": "https://github.com/jeffflater/mock-json-api",
   "devDependencies": {
-    "dummy-json": "0.0.2",
-    "json-store": "0.0.1",
-    "express": "~4.0.0"
+    "jasmine-node-karma": "^1.6.1",
+    "karma": "^0.12.17",
+    "karma-jasmine": "^0.1.5"
   },
   "dependencies": {
     "dummy-json": "~0.0.2",
