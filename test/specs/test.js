@@ -5,6 +5,8 @@ var express = require('express');
 var mock = require('./../../mock');
 var port = 3001;
 
+//require('rootpath')();
+
 app = express();
 
 var template1 = function(){ return '{ "name": {{firstName}}, "age": {{number 18 65}} }' };
@@ -12,7 +14,7 @@ var template2 = function(){ return '{ "name": {{firstName}}, "age": {{number 18 
 var template3 = function(){ return '{ "name": {{firstName}}, "age": {{number 18 65}} }' };
 
 var mockapi = mock({
-    jsonStore: __dirname + '/test/data/data.json',
+    jsonStore: '../../test/data/data.json', //rootDirectory + '\\test\\data\\data.json',
     mockRoutes: [
         {
             name: 'foo',
