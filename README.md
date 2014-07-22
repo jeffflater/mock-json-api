@@ -14,6 +14,8 @@ Properties
 - **mockRoutes**: An array of routes to mock
     - **name**: The unique identifier of the service method to be mocked
     - **mockRoute**: The URl of the route to mock
+    - **testScope**: The behavior of the route response; success, fail, or error
+    - **testScenario**: Determines which JSON template to return in the array when testScope is "success"
     - **jsonTemplate**: The actual object to be returned from the mock route.  This will also tell node how to construct the dummy data the first time the route is requested
 
 ```javascript
