@@ -1,11 +1,13 @@
 # mock-json-api
 
-NPM - Mock JSON API
+NPM - Mock JSON API (BETA)
 
 A node module for generating dummy data quickly and mocking an API to deliver that data as json objects defined by the developer
 
 Dependencies:
-- jsonStore
+- dummy-json
+- json-store
+- express
 
 Properties
 - **jsonStore**: This is the local file location for the actual data that gets generated.  The data will be stored in this json file and served up on request by node.  This allows us to serve up well-known data vs. generating it everytime, thus simulating a database (of sorts).
@@ -26,7 +28,9 @@ var mockapi = mock({
         {
             name: 'foo',
             mockRoute: '/api/foo',
-            jsonTemplate: '{
+            testScope: 'success',
+            testScenario: 1,
+            jsonTemplate: [function(){ return '{
                 "people": [
                     {{#repeat 2}} {
                         "id": {{index}},
@@ -43,15 +47,25 @@ var mockapi = mock({
                     {{/repeat}} ],
                 "revision": {{uniqueIndex}},
                 "tolerance": {{number '0' '2'}},
-            }'
+            }' };]
         },
         {
             name: 'bar',
             mockRoute: '/api/bar',
-            jsonTemplate: '{ 
-                "name": {{firstName}}, 
-                "age": {{number 18 65}} 
-            }'
+            testScope: 'fail',
+            jsonTemplate: [function(){ return '{
+                "name": "{{firstName}}",
+                "age": {{number 18 65}}
+            }' };]
+        },
+        {
+            name: 'bar',
+            mockRoute: '/api/foobar',
+            testScope: 'error',
+            jsonTemplate: [function(){ return '{
+                "name": "{{firstName}}",
+                "age": {{number 18 65}}
+            }' };]
         }
     ]
 });
