@@ -2,7 +2,7 @@
  * Created by jeff.flater on 4/23/2014.
  */
 var express = require('express');
-var mock = require('./mock');
+var mock = require('./../../mock');
 var port = 3001;
 
 app = express();
