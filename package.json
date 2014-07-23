@@ -22,6 +22,7 @@
   },
   "homepage": "https://github.com/jeffflater/mock-json-api",
   "devDependencies": {
+    "grunt": "^0.4.5",
     "jasmine-node-karma": "^1.6.1",
     "karma": "^0.12.17",
     "karma-jasmine": "^0.1.5",
