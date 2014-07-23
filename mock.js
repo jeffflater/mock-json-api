@@ -73,9 +73,27 @@ function _routeResponse (route) {
         case 'success':
             response = _getStore(guid);
             if (response === null || typeof response === 'undefined') {
-                //choose function in array to return json result
-                var jsonResults = route.jsonTemplate[route.testScenario]();
-                response = _setStore(guid, dummyJson.parse(jsonResults));
+                var jsonTemplate = null;
+
+                if (typeof route.jsonTemplate === 'object') {
+                    var scenario = parseInt(route.testScenario);
+                    if (scenario === NaN) {
+                        scenario = 0;
+                    }
+                    if (route.jsonTemplate.length > scenario) {
+                        jsonTemplate = route.jsonTemplate[scenario]();
+                    }
+                }
+
+                if (typeof route.jsonTemplate === 'string') {
+                    jsonTemplate = route.jsonTemplate;
+                }
+
+                if (jsonTemplate !== null) {
+                    response = _setStore(guid, dummyJson.parse(jsonTemplate));
+                } else {
+                    response = 500; //throw error; not a valid json template
+                }
             }
             break;
 
