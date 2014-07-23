@@ -3,59 +3,65 @@ var express = require('express'),
     port = 3001,
     request = require('request'),
     validator = require('validator'),
-    baseUrl = 'http://localhost';
+    baseUrl = 'http://localhost',
+    app = express(),
+    server = null;
 
 require('rootpath')();
 
-var app = express();
-
-var template1 = function(){ return '{ "name": "{{firstName}}", "age": {{number 18 65}} }' };
-var template2 = function(){ return '{ "name": "{{firstName}}", "age": {{number 18 65}} }' };
-var template3 = function(){ return '{ "name": "{{firstName}}", "age": {{number 18 65}} }' };
-
-var mockapi = mock({
-    jsonStore: 'test/data/data.json',
-    mockRoutes: [
-        {
-            name: 'foo',
-            mockRoute: '/api/foo',
-            //testScope: 'success',       //success | fail | error
-            //testScenario: 1,
-            jsonTemplate: [template1, template2, template3]
-        },
-        {
-            name: 'bar',
-            mockRoute: '/api/bar',
-            //testScope: 'fail',
-            jsonTemplate: template2
-        },
-        {
-            name: 'foobar',
-            mockRoute: '/api/foobar',
-            //testScope: 'error',
-            jsonTemplate: template3
-        }
-    ]
-});
-
-app.use(mockapi.registerRoutes);
-
-app.listen(port);
-console.log('listening on port: '+port);
-
 describe("Test Mock Scenarios", function() {
 
+    beforeEach(function () {
+        server = app.listen(port);
+    });
+
+    afterEach(function () {
+        server.close();
+    });
+
     it("Test JSON for mock api/foo route...", function(done) {
+
+        var testTemplate1 = function(){ return '{ "name": "{{firstName}}", "age": {{number 18 65}} }' };
+        var testTemplate2 = function(){ return '{ "name": "{{firstName}}", "age": {{number 18 65}} }' };
+        var testTemplate3 = function(){ return '{ "name": "{{firstName}}", "age": {{number 18 65}} }' };
+
+        var routes = mock({
+            jsonStore: 'test/data/data.json',
+            mockRoutes: [
+                {
+                    name: 'foo',
+                    mockRoute: '/api/foo',
+                    testScope: 'success',
+                    testScenario: 1,
+                    jsonTemplate: [testTemplate1, testTemplate2, testTemplate3]
+                }
+            ]
+        });
+
+        app.use(routes.registerRoutes);
+
         var url = baseUrl+':'+port+'/api/foo?scope=success&scenario=1';
-        console.log(url);
         request(url, function(error, response, body){
-            console.log('JSON: '+body);
             expect(validator.isJSON(body)).toEqual(true);
             done();
         });
     });
 
     it("Test 404 for mock api/bar route...", function(done) {
+
+        var routes = mock({
+            jsonStore: 'test/data/data.json',
+            mockRoutes: [
+                {
+                    name: 'bar',
+                    mockRoute: '/api/bar',
+                    testScope: 'fail'
+                }
+            ]
+        });
+
+        app.use(routes.registerRoutes);
+
         var url = baseUrl+':'+port+'/api/bar?scope=fail';
         request(url, function(error, response, body){
             expect(response.statusCode).toEqual(404);
@@ -64,6 +70,20 @@ describe("Test Mock Scenarios", function() {
     });
 
     it("Test 500 for mock api/bar route...", function(done) {
+
+        var routes = mock({
+            jsonStore: 'test/data/data.json',
+            mockRoutes: [
+                {
+                    name: 'foobar',
+                    mockRoute: '/api/foobar',
+                    testScope: 'error'
+                }
+            ]
+        });
+
+        app.use(routes.registerRoutes);
+
         var url = baseUrl+':'+port+'/api/foobar?scope=error';
         request(url, function(error, response, body){
             expect(response.statusCode).toEqual(500);

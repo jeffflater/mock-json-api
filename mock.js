@@ -67,8 +67,6 @@ function _routeResponse (route) {
     var response = null;
     var guid = route.name+route.testScope+route.testScenario;
 
-    console.log('route.name: '+route.name);
-
     switch (route.testScope) {
         //Simulates a successful response
         case 'success':
