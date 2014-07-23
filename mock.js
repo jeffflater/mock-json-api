@@ -35,10 +35,10 @@ Mock.prototype.registerRoutes = function (req, res) {
             var route = routes[i];
 
             //If scope & scenario is passed via the url; then, overwrite the testScope & testScenario properties
-            if (req.query !== null || typeof req.query !== 'undefined') {
+            if (typeof req.query !== 'undefined') {
 
                 var testScope = req.query.scope;
-                if (testScope !== null || typeof testScope !== 'undefined') {
+                if (typeof testScope !== 'undefined') {
                     route.testScope = testScope;
                 }
 
