@@ -43,7 +43,7 @@ Mock.prototype.registerRoutes = function (req, res) {
                 }
 
                 var testScenario = req.query.scenario;
-                if (testScenario !== null || typeof testScenario !== 'undefined') {
+                if (typeof testScenario !== 'undefined') {
                     route.testScenario = testScenario;
                 }
             }

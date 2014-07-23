@@ -9,7 +9,8 @@ var express = require('express'),
     routeName = null,
     routePath = null,
     statusCode = null,
-    testScope = null;
+    testScope = null,
+    testScenario = null;
 
 require('rootpath')();
 
@@ -20,6 +21,7 @@ describe("Test Mock Success Scenarios", function() {
         routePath = '/api/fooSuccess';
         statusCode = 200;
         testScope = 'success';
+        testScenario = 1;
 
         server = app.listen(port);
     });
@@ -28,7 +30,7 @@ describe("Test Mock Success Scenarios", function() {
         server.close();
     });
 
-    it("Test successful response for mock api/foo NOT using queryString parameters", function(done){
+    it("Test successful response for mock api/fooSuccess NOT using queryString parameters", function(done){
 
         var testTemplate1 = function(){ return '{ "name": "{{firstName}}", "age": {{number 18 65}} }' };
         var testTemplate2 = function(){ return '{ "name": "{{firstName}}", "age": {{number 18 65}} }' };
@@ -41,7 +43,7 @@ describe("Test Mock Success Scenarios", function() {
                     name: routeName,
                     mockRoute: routePath,
                     testScope: testScope,
-                    testScenario: 1,
+                    testScenario: testScenario,
                     jsonTemplate: [testTemplate1, testTemplate2, testTemplate3]
                 }
             ]
@@ -59,7 +61,7 @@ describe("Test Mock Success Scenarios", function() {
 
     });
 
-    it("Test successful response for mock api/foo using scope/scenario queryString parameters", function(done){
+    it("Test successful response for mock api/fooSuccess using scope/scenario queryString parameters", function(done){
 
         var testTemplate1 = function(){ return '{ "name": "{{firstName}}", "age": {{number 18 65}} }' };
         var testTemplate2 = function(){ return '{ "name": "{{firstName}}", "age": {{number 18 65}} }' };
