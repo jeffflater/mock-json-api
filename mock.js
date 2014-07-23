@@ -30,8 +30,25 @@ function Mock(config) {
 Mock.prototype.registerRoutes = function (req, res) {
 
     for (var i = 0; i < routes.length; i++) {
-        if (routes[i].mockRoute == req.path) {
-            res.send(_routeResponse(routes[i]));
+        if (routes[i].mockRoute === req.path) {
+
+            var route = routes[i];
+
+            //If scope & scenario is passed via the url; then, overwrite the testScope & testScenario properties
+            if (req.query !== null || typeof req.query !== 'undefined') {
+
+                var testScope = req.query.scope;
+                if (testScope !== null || typeof testScope !== 'undefined') {
+                    route.testScope = testScope;
+                }
+
+                var testScenario = req.query.scenario;
+                if (testScenario !== null || typeof testScenario !== 'undefined') {
+                    route.testScenario = testScenario;
+                }
+            }
+
+            res.send(_routeResponse(route));
             break;
         }
     }
@@ -49,6 +66,8 @@ module.exports = function (config) {
 function _routeResponse (route) {
     var response = null;
     var guid = route.name+route.testScope+route.testScenario;
+
+    console.log('route.name: '+route.name);
 
     switch (route.testScope) {
         //Simulates a successful response

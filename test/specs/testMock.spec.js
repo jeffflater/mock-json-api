@@ -3,7 +3,7 @@ var express = require('express'),
     port = 3001,
     request = require('request'),
     validator = require('validator'),
-    fs = require('fs');
+    baseUrl = 'http://localhost';
 
 require('rootpath')();
 
@@ -19,20 +19,20 @@ var mockapi = mock({
         {
             name: 'foo',
             mockRoute: '/api/foo',
-            testScope: 'success',       //success | fail | error
-            testScenario: 1,
+            //testScope: 'success',       //success | fail | error
+            //testScenario: 1,
             jsonTemplate: [template1, template2, template3]
         },
         {
             name: 'bar',
             mockRoute: '/api/bar',
-            testScope: 'fail',
+            //testScope: 'fail',
             jsonTemplate: template2
         },
         {
             name: 'foobar',
             mockRoute: '/api/foobar',
-            testScope: 'error',
+            //testScope: 'error',
             jsonTemplate: template3
         }
     ]
@@ -46,22 +46,26 @@ console.log('listening on port: '+port);
 describe("Test Mock Scenarios", function() {
 
     it("Test JSON for mock api/foo route...", function(done) {
-        request("http://localhost:3001/api/foo", function(error, response, body){
-
+        var url = baseUrl+':'+port+'/api/foo?scope=success&scenario=1';
+        console.log(url);
+        request(url, function(error, response, body){
+            console.log('JSON: '+body);
             expect(validator.isJSON(body)).toEqual(true);
             done();
         });
     });
 
     it("Test 404 for mock api/bar route...", function(done) {
-        request("http://localhost:3001/api/bar", function(error, response, body){
+        var url = baseUrl+':'+port+'/api/bar?scope=fail';
+        request(url, function(error, response, body){
             expect(response.statusCode).toEqual(404);
             done();
         });
     });
 
     it("Test 500 for mock api/bar route...", function(done) {
-        request("http://localhost:3001/api/foobar", function(error, response, body){
+        var url = baseUrl+':'+port+'/api/foobar?scope=error';
+        request(url, function(error, response, body){
             expect(response.statusCode).toEqual(500);
             done();
         });
