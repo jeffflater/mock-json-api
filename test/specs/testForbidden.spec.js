@@ -28,13 +28,50 @@ describe("Test Mock Forbidden Scenarios", function() {
     });
 
     it("Test forbidden response (403) NOT using queryString parameters", function(done){
-        expect(true).toEqual(true);
-        done();
+
+        var route = mock({
+            jsonStore: 'test/data/data.json',
+            mockRoutes: [
+                {
+                    name: routeName,
+                    mockRoute: routePath,
+                    testScope: testScope
+                }
+            ]
+        });
+
+        app.use(route.registerRoutes);
+
+        var url = baseUrl+':'+port+routePath;
+
+        request(url, function(error, response, body){
+            expect(response.statusCode).toEqual(statusCode);
+            done();
+        });
+
     });
 
     it("Test forbidden response (403) using queryString parameters", function(done){
-        expect(true).toEqual(true);
-        done();
+
+        var route = mock({
+            jsonStore: 'test/data/data.json',
+            mockRoutes: [
+                {
+                    name: routeName,
+                    mockRoute: routePath
+                }
+            ]
+        });
+
+        app.use(route.registerRoutes);
+
+        var url = baseUrl+':'+port+routePath+'?scope='+testScope;
+
+        request(url, function(error, response, body){
+            expect(response.statusCode).toEqual(statusCode);
+            done();
+        });
+
     });
 
 });
