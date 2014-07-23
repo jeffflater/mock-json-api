@@ -68,7 +68,8 @@ function _routeResponse (route) {
     var guid = route.name+route.testScope+route.testScenario;
 
     switch (route.testScope) {
-        //Simulates a successful response
+
+        //Simulates a successful response (200) - 10.2.1 200 OK
         case 'success':
             response = _getStore(guid);
             if (response === null || typeof response === 'undefined') {
@@ -79,19 +80,39 @@ function _routeResponse (route) {
             break;
 
 
-        //Simulates a bad response (404)
-        case 'fail':
+        //Simulates a bad response (404) - 10.4.5 404 Not Found
+        case 'notFound':
             response = 404;
             break;
 
-        //Simulates a bad response (500)
+        //Simulates a bad response (408) - 10.4.9 408 Request Timeout
+        case 'timeout':
+            response = 408;
+            break;
+
+        //Simulates a bad response (401) - 10.4.2 401 Unauthorized
+        case 'unauthorized':
+            response = 401;
+            break;
+
+        //Simulates a bad response (403) - 10.4.4 403 Forbidden
+        case 'forbidden':
+            response = 403;
+            break;
+
+        //Simulates a bad response (400) - 10.4.1 400 Bad Request
+        case 'badRequest':
+            response = 400;
+            break;
+
+        //Simulates a bad response (500) - 10.5.1 500 Internal Server Error
         case 'error':
             response = 500;
             break;
 
-        //Defaults to a 404 response
+        //Defaults to a successful response (200) - 10.2.1 200 OK
         default:
-            response = 404;
+            response = 200;
             break;
     }
 

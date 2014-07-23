@@ -9,7 +9,7 @@ var express = require('express'),
 
 require('rootpath')();
 
-describe("Test Mock Scenarios", function() {
+describe("Test Mock API Scope & Scenarios", function() {
 
     beforeEach(function () {
         server = app.listen(port);
@@ -18,6 +18,7 @@ describe("Test Mock Scenarios", function() {
     afterEach(function () {
         server.close();
     });
+
 
     it("Test JSON for mock api/foo route...", function(done) {
 
@@ -41,6 +42,7 @@ describe("Test Mock Scenarios", function() {
         app.use(routes.registerRoutes);
 
         var url = baseUrl+':'+port+'/api/foo?scope=success&scenario=1';
+
         request(url, function(error, response, body){
             expect(validator.isJSON(body)).toEqual(true);
             done();
@@ -55,14 +57,15 @@ describe("Test Mock Scenarios", function() {
                 {
                     name: 'bar',
                     mockRoute: '/api/bar',
-                    testScope: 'fail'
+                    testScope: 'notFound'
                 }
             ]
         });
 
         app.use(routes.registerRoutes);
 
-        var url = baseUrl+':'+port+'/api/bar?scope=fail';
+        var url = baseUrl+':'+port+'/api/bar?scope=notFound';
+
         request(url, function(error, response, body){
             expect(response.statusCode).toEqual(404);
             done();
@@ -85,6 +88,7 @@ describe("Test Mock Scenarios", function() {
         app.use(routes.registerRoutes);
 
         var url = baseUrl+':'+port+'/api/foobar?scope=error';
+
         request(url, function(error, response, body){
             expect(response.statusCode).toEqual(500);
             done();
