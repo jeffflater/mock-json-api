@@ -15,10 +15,10 @@ require('rootpath')();
 describe("Test Mock Bad Request Scenarios", function() {
 
     beforeEach(function () {
-        routeName = 'fooBadRequest';
-        routePath = '/api/fooBadRequest';
+        routeName = "fooBadRequest";
+        routePath = "/api/fooBadRequest";
         statusCode = 400;
-        testScope = 'badRequest';
+        testScope = "badRequest";
 
         server = app.listen(port);
     });
@@ -30,12 +30,12 @@ describe("Test Mock Bad Request Scenarios", function() {
     it("Test bad request response (400) NOT using queryString parameters", function(done){
 
         var route = mock({
-            jsonStore: 'test/data/data.json',
-            mockRoutes: [
+            "jsonStore": "test/data/data.json",
+            "mockRoutes": [
                 {
-                    name: routeName,
-                    mockRoute: routePath,
-                    testScope: testScope
+                    "name": routeName,
+                    "mockRoute": routePath,
+                    "testScope": testScope
                 }
             ]
         });
@@ -54,11 +54,11 @@ describe("Test Mock Bad Request Scenarios", function() {
     it("Test bad request response (400) using queryString parameters", function(done){
 
         var route = mock({
-            jsonStore: 'test/data/data.json',
-            mockRoutes: [
+            "jsonStore": "test/data/data.json",
+            "mockRoutes": [
                 {
-                    name: routeName,
-                    mockRoute: routePath
+                    "name": routeName,
+                    "mockRoute": routePath
                 }
             ]
         });

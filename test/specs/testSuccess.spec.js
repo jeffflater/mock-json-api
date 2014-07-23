@@ -61,6 +61,8 @@ describe("Test Mock Success Scenarios", function() {
 
     });
 
+    /*
+
     it("Test successful response for mock api/fooSuccess using scope/scenario queryString parameters with multiple templates defining the test scenario", function(done){
 
         var testTemplate1 = function(){ return '{ "name": "{{firstName}}", "age": {{number 18 65}} }' };
@@ -151,7 +153,6 @@ describe("Test Mock Success Scenarios", function() {
 
     it("Test successful response for mock api/fooSuccess NOT using queryString parameters for a single template NOT wrapped in a function", function(done){
 
-
         var testTemplate = '{ "name": "{{firstName}}", "age": {{number 18 65}} }';
 
         var routes = mock({
@@ -178,7 +179,6 @@ describe("Test Mock Success Scenarios", function() {
     });
 
     it("Test successful response for mock api/fooSuccess using queryString parameters for a single template NOT wrapped in a function", function(done){
-
 
         var testTemplate = '{ "name": "{{firstName}}", "age": {{number 18 65}} }';
 
@@ -258,5 +258,7 @@ describe("Test Mock Success Scenarios", function() {
         });
 
     });
+
+    */
 
 });

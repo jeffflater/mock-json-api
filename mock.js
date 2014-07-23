@@ -2,16 +2,18 @@
  * Created by jeff.flater on 4/23/2014.
  */
 var dummyJson = require('dummy-json'),
-    jsonStore = require('json-store');
+    jsonStore = require('json-store'),
+    validator = require('validator');
 
 var configOptions = ['jsonStore',
-                        'mockRoutes'];
+    'mockRoutes'];
 
 var routes,
     store;
 
 function Mock(config) {
     // Validate JSON object
+    //todo: replace with validator
     if (!_tryParseJSON(JSON.stringify(config))) {
         throw 'Invalid json config object!';
     }
@@ -56,12 +58,12 @@ Mock.prototype.registerRoutes = function (req, res) {
 };
 
 module.exports = function (config) {
-  return new Mock(config);
+    return new Mock(config);
 };
 
 /*
-* PRIVATE METHODS
-* */
+ * PRIVATE METHODS
+ * */
 
 function _routeResponse (route) {
     var response = null;
@@ -76,6 +78,7 @@ function _routeResponse (route) {
                 var jsonTemplate = null;
 
                 if (typeof route.jsonTemplate === 'object') {
+
                     var scenario = parseInt(route.testScenario);
                     if (scenario === NaN) {
                         scenario = 0;
@@ -89,12 +92,12 @@ function _routeResponse (route) {
                     jsonTemplate = route.jsonTemplate;
                 }
 
-                if (jsonTemplate !== null) {
-                    response = _setStore(guid, dummyJson.parse(jsonTemplate));
-                } else {
-                    response = 500; //throw error; not a valid json template
-                }
+                //todo: use validator to enhance template validation
+                response = _setStore(guid, dummyJson.parse(jsonTemplate));
             }
+
+            //todo: use validator to enhance response validation
+
             break;
 
 
@@ -147,6 +150,7 @@ function _setStore (key, value) {
     return value;
 }
 
+//todo: replace with validator
 function _tryParseJSON (jsonString){
     try {
         var o = JSON.parse(jsonString);
@@ -163,3 +167,4 @@ function _tryParseJSON (jsonString){
 
     return false;
 }
+

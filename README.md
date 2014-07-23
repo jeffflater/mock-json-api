@@ -7,6 +7,7 @@ A node module for generating dummy data quickly and mocking an API to deliver th
 Dependencies:
 - dummy-json
 - json-store
+- validator
 - express
 
 Properties
