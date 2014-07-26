@@ -81,7 +81,7 @@ function _routeResponse (route) {
                 if (typeof route.jsonTemplate === 'object') {
 
                     var scenario = parseInt(route.testScenario);
-                    if (scenario === NaN) {
+                    if (isNaN(scenario)) {
                         scenario = 0;
                     }
                     if (route.jsonTemplate.length > scenario) {
