@@ -50,6 +50,7 @@ Mock.prototype.registerRoutes = function (req, res) {
                 }
             }
 
+            res.set('Content-Type', 'application/json');
             res.send(_routeResponse(route));
             break;
         }
