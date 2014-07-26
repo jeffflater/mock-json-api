@@ -50,7 +50,7 @@ var mockapi = mock({
                     {{/repeat}} ],
                 "revision": {{uniqueIndex}},
                 "tolerance": {{number '0' '2'}},
-            }' };]
+            }'; };]
         },
         {
             name: 'bar',
@@ -59,7 +59,7 @@ var mockapi = mock({
             jsonTemplate: [function(){ return '{
                 "name": "{{firstName}}",
                 "age": {{number 18 65}}
-            }' };]
+            }'; };]
         },
         {
             name: 'bar',
@@ -68,7 +68,7 @@ var mockapi = mock({
             jsonTemplate: [function(){ return '{
                 "name": "{{firstName}}",
                 "age": {{number 18 65}}
-            }' };]
+            }'; };]
         }
     ]
 });
