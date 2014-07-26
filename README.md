@@ -23,7 +23,7 @@ Properties
 var express = require('express');
 var mock = require('mock-json-api');
 
-app = express();
+server = express();
 
 var mockapi = mock({
     jsonStore: __dirname + '/data.json',
@@ -73,6 +73,6 @@ var mockapi = mock({
     ]
 });
 
-app.use(mockapi.registerRoutes);
-app.listen(3001);
+server.use(mockapi.registerRoutes);
+server.listen(3001);
 ```
