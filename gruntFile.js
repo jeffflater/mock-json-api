@@ -16,11 +16,13 @@ module.exports = function(grunt) {
                 reporter: require('jshint-stylish')
             },
             all: ['mock.js', 'test/specs/*.spec.js']
+        },
+        test: {
+            specs: 'test/specs/'
         }
     });
 
     grunt.registerTask('jsonStore:clean', 'Clean jsonStore data file.', function() {
-
         var jsonStore = grunt.config('jsonStore.path');
         var clean = grunt.config('jsonStore.clean');
 
@@ -33,7 +35,15 @@ module.exports = function(grunt) {
 
     grunt.registerTask('mockTest', 'Test Mock JSON API.', function() {
         var done = this.async();
-        exec("jasmine-node-karma test/specs/ --verbose", function(error, stdout, stderr){
+        var specs = grunt.config('test.specs');
+
+        exec("jasmine-node-karma "+specs+" --verbose", function(error, stdout, stderr){
+            if (error){
+                grunt.log.writeln(error);
+            }
+            if (stderr) {
+                grunt.log.writeln(stderr);
+            }
             grunt.log.writeln(stdout);
             done(true);
         });
