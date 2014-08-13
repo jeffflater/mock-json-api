@@ -18,6 +18,8 @@ Properties
     - **testScope**: The behavior of the route response; success, fail, or error
     - **testScenario**: Determines which JSON template to return in the array when testScope is "success"
     - **jsonTemplate**: The actual object to be returned from the mock route.  This will also tell node how to construct the dummy data the first time the route is requested
+	- **data**: Your own data to be used with dummy-json.
+	- **helpers**: Custom helpers to be used with dummy-json. Refer to the [dummy-json documention](https://github.com/dummy-json) for more information.
 
 ```javascript
 var express = require('express');

@@ -77,6 +77,7 @@ function _routeResponse (route) {
             response = _getStore(guid);
             if (response === null || typeof response === 'undefined') {
                 var jsonTemplate = null;
+				var dummyOptions = {};
 
                 if (typeof route.jsonTemplate === 'object') {
 
@@ -92,9 +93,16 @@ function _routeResponse (route) {
                 if (typeof route.jsonTemplate === 'string') {
                     jsonTemplate = route.jsonTemplate;
                 }
+				
+				if (route.data) {
+					dummyOptions.data = route.data;
+				}
+				if (route.helpers) {
+					dummyOptions.helpers = route.helpers;
+				}
 
                 //todo: use validator to enhance template validation
-                response = _setStore(guid, dummyJson.parse(jsonTemplate));
+                response = _setStore(guid, dummyJson.parse(jsonTemplate, dummyOptions));
             }
 
             //todo: use validator to enhance response validation
