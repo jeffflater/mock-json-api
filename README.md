@@ -1,6 +1,6 @@
 # mock-json-api
 
-NPM - Mock JSON API (BETA)
+NPM - Mock JSON API
 
 A node module for generating dummy data quickly and mocking an API to deliver that data as json objects defined by the developer
 
