@@ -32,7 +32,7 @@ function Mock(config) {
 Mock.prototype.registerRoutes = function (req, res) {
 
     for (var i = 0; i < routes.length; i++) {
-        if (routes[i].mockRoute === req.path) {
+        if (req.path.match(routes[i].mockRoute) !== null) {
 
             var route = routes[i];
 
