@@ -31,46 +31,177 @@ var mockapi = mock({
     jsonStore: __dirname + '/data.json',
     mockRoutes: [
         {
-            name: 'foo',
-            mockRoute: '/api/foo',
-            testScope: 'success',
-            testScenario: 1,
-            jsonTemplate: [function(){ return '{
-                "people": [
-                    {{#repeat 2}} {
-                        "id": {{index}},
-                        "firstName": "{{firstName}}",
-                        "lastName": "{{lastName}}",
-                        "email": "{{email}}",
-                        "work": "{{company}}",
-                        "age": {{number 20 50}},
-                        "optedin": {{boolean}}
-                    } {{/repeat}}],
-                "images": [
-                    {{#repeat 3 6}}
-                        'img{{index}}.png'
-                    {{/repeat}} ],
-                "revision": {{uniqueIndex}},
-                "tolerance": {{number '0' '2'}},
-            }'; };]
+		name: 'myFirstRoute',
+		mockRoute: '/api/foo',
+		testScope: 'success',
+		testScenario: 1,
+		jsonTemplate: [
+			function() { return //Scenario 0
+				'{'+
+					'"people": ['+
+					'{{#repeat 2}} {'+
+						'"id": {{index}},'+
+						'"firstName": "{{firstName}}",'+
+						'"lastName": "{{lastName}}",'+
+						'"email": "{{email}}",'+
+						'"work": "{{company}}",'+
+						'"age": {{number 20 50}},'+
+						'"optedin": {{boolean}}'+
+					'} {{/repeat}}],'+
+					'"images": ['+
+						'{{#repeat 3 6}}'+
+							'"img{{index}}.png"'+
+						'{{/repeat}} ],'+
+					'"revision": {{uniqueIndex}},'+
+					'"tolerance": {{number '0' '2'}},'+
+				'}'; 
+			},
+			function() { return //Scenario 1
+				'{'+
+					'"people": ['+
+						'{{#repeat 300}} {'+
+							'"id": {{index}},'+
+							'"firstName": "{{firstName}}",'+
+							'"lastName": "{{lastName}}",'+
+							'"email": "{{email}}",'+
+							'"work": "{{company}}",'+
+							'"age": {{number 18 35}},'+
+							'"optedin": {{boolean}}'+
+						'} {{/repeat}}],'+
+					'"images": ['+
+						'{{#repeat 6 9}}'+
+							'"img{{index}}.png"'+
+						'{{/repeat}} ],'+
+					'"revision": {{uniqueIndex}},'+
+					'"tolerance": {{number '0' '2'}},'+
+				'}'; 
+            		};]
         },
         {
-            name: 'bar',
-            mockRoute: '/api/bar',
-            testScope: 'fail',
-            jsonTemplate: [function(){ return '{
-                "name": "{{firstName}}",
-                "age": {{number 18 65}}
-            }'; };]
+		name: 'anotherRoute',
+		mockRoute: '/api/bar',
+		testScope: 'fail',
+		jsonTemplate: [ function() { return 
+			'{' +
+				'"name": "{{firstName}}",'+
+				'"age": {{number 18 65}}'+
+			'}'; 
+		};]
         },
         {
-            name: 'bar',
-            mockRoute: '/api/foobar',
-            testScope: 'error',
-            jsonTemplate: [function(){ return '{
-                "name": "{{firstName}}",
-                "age": {{number 18 65}}
-            }'; };]
+		name: 'routeUsingCustomData',
+		mockRoute: '/api/customData',
+		testScope: 'success',
+		data: {
+			drawers: [
+				{name: 'Drawer 1', id: '1'}, 
+				{name: 'Drawer 2', id: '2'}, 
+				{name: 'Drawer 3', id: '3'}, 
+				{name: 'Drawer 4', id: '4'}],
+			attributes: [{
+					PropertyType: 0, 
+					DisplayName: 'Bool', 
+					Id: 'ir:attrdef_1'
+				},
+				{
+					PropertyType: 3, 
+					DisplayName: 'Date', 
+					Id: 'ir:attrdef_2'
+				},
+				{
+					PropertyType: 6, 
+					DisplayName: 'String', 
+					Id: 'ir:attrdef_3'
+				},
+				{
+					PropertyType: 6, 
+					DisplayName: 'String with choices', 
+					Id: 'ir:attrdef_4', 
+					Choices: [{
+							DisplayName: 'Choice 1', 
+							Value: 'Choice 1'
+						}, 
+						{
+							DisplayName: 'Choice 2', 
+							Value: 'Choice 2'
+						}
+					]
+				},
+				{
+					PropertyType: 4, 
+					DisplayName: 'Attr Float no min max', 
+					Id: 'ir:attrdef_8', 
+					MaximumValue: 2147483647, 
+					MinimumValue: -2147483648
+				},
+				{
+					PropertyType: 1, 
+					DisplayName: 'Attr User', 
+					Id: 'ir:attrdef_11', 
+					Choices: [{
+							DisplayName: 'Corey', 
+							Value: 'Corey'
+						}, 
+						{
+							DisplayName: 'Scott', 
+							Value: 'Scott'
+						}, 
+						{
+							DisplayName: 'Derek', 
+							Value: 'Derek'
+						}]
+				}]
+		},
+		jsonTemplate: [ function() { return
+			'{' +
+				'"drawers":[' +
+				'       {{#repeat drawers}}' +
+				'       {' +
+				'       "fileTypes":' +
+				'           [' +
+				'               {{#repeat 1 5}}' +
+				'               {{number 5}}' +
+				'               {{/repeat}}' +
+				'           ],' +
+				'       "id":"{{this.id}}",' +
+				'       "name":"{{this.name}}"' +
+				'       }{{/repeat}}' +
+				'   ],' +
+				'"fileTypes":[' +
+				'   {{#repeat 5 8}}' +
+				'   	{' +
+				'       "attributes":[' +
+				'           {{#repeat attributes}}' +
+				'           {' +
+				'           {{#if this.Choices}}'+
+				'           "Choices": [' +
+				'           {{#repeat this.Choices}}' +
+				'           {"DisplayName": "{{this.DisplayName}}", "Value": "{{this.Value}}"}' +
+				'           {{/repeat}}' +
+				'           ],' +
+				'           {{else}}' +
+				'           "Choices": [],' +
+				'           {{/if}}' +
+				'           {{#if this.MinimumValue}}' +
+				'           "MinimumValue":"{{this.MinimumValue}}",' +
+				'           {{/if}}' +
+				'           {{#if this.MaximumValue}}' +
+				'           "MaximumValue":"{{this.MaximumValue}}",' +
+				'           {{/if}}' +
+				'           "Id":"{{this.Id}}",' +
+				'           "DisplayName":"{{this.DisplayName}}",' +
+				'           "PropertyType":{{this.PropertyType}}' +
+				'           }' +
+				'           {{/repeat}}' +
+				'       ],' +
+				'       "id": "{{uniqueIndex}}",' +
+				'       "name": "{{company}}",' +       
+				'   	}' +
+				'	 {{/repeat}}' +
+				']' +
+        		'}';
+		};
+     	     ]
         }
     ]
 });
