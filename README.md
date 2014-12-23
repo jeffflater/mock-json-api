@@ -36,6 +36,7 @@ var mockapi = mock({
 		mockRoute: '/api/foo',
 		testScope: 'success',
 		testScenario: 1,
+		latency: 300,
 		jsonTemplate: [
 			function() { return //Scenario 0
 				'{'+
@@ -93,6 +94,7 @@ var mockapi = mock({
 		name: 'routeUsingCustomData',
 		mockRoute: '/api/customData',
 		testScope: 'success',
+		latency: '300-7000',
 		data: {
 			drawers: [
 				{name: 'Drawer 1', id: '1'}, 
