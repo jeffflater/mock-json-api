@@ -31,8 +31,12 @@ function Mock(config) {
 
 Mock.prototype.registerRoutes = function (req, res) {
 
+    var found = false;
+
     for (var i = 0; i < routes.length; i++) {
         if (req.path.match(routes[i].mockRoute) !== null) {
+
+            found = true;
 
             var route = routes[i];
 
@@ -50,12 +54,39 @@ Mock.prototype.registerRoutes = function (req, res) {
                 }
             }
 
-            res.set('Content-Type', 'application/json');
-            res.send(_routeResponse(route));
+            var latency = 0;
+            try {
+                if (routes[i].latency) {
+                    if (isNaN(routes[i].latency)) {
+                        var splits = routes[i].latency.split("-");
+                        var min = parseInt(splits[0]);
+                        var max = parseInt(splits[1]);
+                        latency = Math.floor(Math.random()*(max-min+1)+min);
+                        if (latency > max){
+                            latency = max;
+                        }
+                    } else {
+                        latency = routes[i].latency;
+                    }
+                }
+            }
+            catch(err) {
+                console.log(err);
+                latency = 0;
+            }
+
+            setTimeout(function(){
+                res.set('Content-Type', 'application/json');
+                res.send(_routeResponse(route));
+                res.end();
+            }, latency);
             break;
         }
     }
-    res.end();  //no routes found, end here!
+
+    if(!found) {
+        res.end();  //no routes found, end here!
+    }
 };
 
 module.exports = function (config) {
