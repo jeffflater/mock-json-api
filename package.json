@@ -1,6 +1,6 @@
 {
   "name": "mock-json-api",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "Mock json api for node",
   "main": "mock.js",
   "repository": {
