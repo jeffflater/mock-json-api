@@ -17,6 +17,7 @@ Properties
     - **mockRoute**: The URl of the route to mock
     - **testScope**: The behavior of the route response; success, fail, or error
     - **testScenario**: Determines which JSON template to return in the array when testScope is "success"
+    - **latency**: in milliseconds.  Will delay the response by set number of miliseconds.  Can be a single number like 3000, a string like '3000' or a range of numbers as a string like '2000-7000'.  If a range, it will randomly select a number in that range on each request.
     - **jsonTemplate**: The actual object to be returned from the mock route.  This will also tell node how to construct the dummy data the first time the route is requested.  It's simply an array of functions that return string representations of json objects laced with dummy json notation.
 	- **data**: Your own data to be used with dummy-json.
 	- **helpers**: Custom helpers to be used with dummy-json. Refer to the [dummy-json documention](https://github.com/webroo/dummy-json) for more information.
