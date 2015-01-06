@@ -14,7 +14,7 @@ Properties
 - **jsonStore**: This is the local file location for the actual data that gets generated.  The data will be stored in this json file and served up on request by node.  This allows us to serve up well-known data vs. generating it everytime, thus simulating a database (of sorts).
 - **mockRoutes**: An array of routes to mock
     - **name**: The unique identifier of the service method to be mocked
-    - **mockRoute**: The URl of the route to mock
+    - **mockRoute**: The URL of the route to mock - a regex
     - **testScope**: The behavior of the route response; success, fail, or error
     - **testScenario**: Determines which JSON template to return in the array when testScope is "success"
     - **latency**: in milliseconds.  Will delay the response by set number of miliseconds.  Can be a single number like 3000, a string like '3000' or a range of numbers as a string like '2000-7000'.  If a range, it will randomly select a number in that range on each request.
