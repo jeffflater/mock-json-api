@@ -75,11 +75,14 @@ Mock.prototype.registerRoutes = function (req, res) {
                 latency = 0;
             }
 
+            var response = _routeResponse(route);
+            
             setTimeout(function(){
-                res.set('Content-Type', 'application/json');
-                res.send(_routeResponse(route));
-                res.end();
+            	res.set('Content-Type', 'application/json');
+            	res.send(response);
+            	res.end();
             }, latency);
+            
             break;
         }
     }
