@@ -79,7 +79,7 @@ Mock.prototype.registerRoutes = function (req, res) {
             
             setTimeout(function(){
             	res.set('Content-Type', 'application/json');
-            	res.send(response);
+                res.status(response.status).send(response.body);
             	res.end();
             }, latency);
             
@@ -108,8 +108,8 @@ function _routeResponse (route) {
 
         //Simulates a successful response (200) - 10.2.1 200 OK
         case 'success':
-            response = _getStore(guid);
-            if (response === null || typeof response === 'undefined') {
+            var store = _getStore(guid);
+            if (store === null || typeof store === 'undefined') {
                 var jsonTemplate = null;
 				var dummyOptions = {};
 
@@ -136,7 +136,15 @@ function _routeResponse (route) {
 				}
 
                 //todo: use validator to enhance template validation
-                response = _setStore(guid, dummyJson.parse(jsonTemplate, dummyOptions));
+                response = {
+                    status: 200,
+                    body: _setStore(guid, dummyJson.parse(jsonTemplate, dummyOptions))
+                };
+            } else {
+                response = {
+                    status: 200,
+                    body: store
+                }
             }
 
             //todo: use validator to enhance response validation
@@ -146,37 +154,58 @@ function _routeResponse (route) {
 
         //Simulates a bad response (404) - 10.4.5 404 Not Found
         case 'notFound':
-            response = 404;
+            response = {
+                status: 404,
+                body: route.errorBody ? route.errorBody : '10.4.5 404 Not Found'
+            };
             break;
 
         //Simulates a bad response (408) - 10.4.9 408 Request Timeout
         case 'timeout':
-            response = 408;
+            response = {
+                status: 408,
+                body: route.errorBody ? route.errorBody : '10.4.9 408 Request Timeout'
+            };
             break;
 
         //Simulates a bad response (401) - 10.4.2 401 Unauthorized
         case 'unauthorized':
-            response = 401;
+            response = {
+                status: 401,
+                body: route.errorBody ? route.errorBody : '10.4.2 401 Unauthorized'
+            };
             break;
 
         //Simulates a bad response (403) - 10.4.4 403 Forbidden
         case 'forbidden':
-            response = 403;
+            response = {
+                status: 403,
+                body: route.errorBody ? route.errorBody : '10.4.4 403 Forbidden'
+            };
             break;
 
         //Simulates a bad response (400) - 10.4.1 400 Bad Request
         case 'badRequest':
-            response = 400;
+            response = {
+                status: 400,
+                body: route.errorBody ? route.errorBody : '10.4.1 400 Bad Request'
+            };
             break;
 
         //Simulates a bad response (500) - 10.5.1 500 Internal Server Error
         case 'error':
-            response = 500;
+            response = {
+                status: 500,
+                body: route.errorBody ? route.errorBody : '10.5.1 500 Internal Server Error'
+            };
             break;
 
         //Defaults to a successful response (200) - 10.2.1 200 OK
         default:
-            response = 200;
+            response = {
+                status: 200,
+                body: route.errorBody ? route.errorBody : '10.2.1 200 OK'
+            };
             break;
     }
 
