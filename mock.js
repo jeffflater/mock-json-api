@@ -76,12 +76,14 @@ Mock.prototype.registerRoutes = function (req, res) {
             }
 
             var response = _routeResponse(route);
-            
+
+            /* jshint ignore:start */
             setTimeout(function(){
             	res.set('Content-Type', 'application/json');
                 res.status(response.status).send(response.body);
             	res.end();
             }, latency);
+            /* jshint ignore:end */
             
             break;
         }
@@ -144,7 +146,7 @@ function _routeResponse (route) {
                 response = {
                     status: 200,
                     body: store
-                }
+                };
             }
 
             //todo: use validator to enhance response validation
