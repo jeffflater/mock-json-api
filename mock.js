@@ -75,7 +75,7 @@ Mock.prototype.registerRoutes = function (req, res) {
                 latency = 0;
             }
 
-            var response = _routeResponse(route);
+            var response = _routeResponse(route, req);
 
             /* jshint ignore:start */
             setTimeout(function(){
@@ -102,7 +102,7 @@ module.exports = function (config) {
  * PRIVATE METHODS
  * */
 
-function _routeResponse (route) {
+function _routeResponse (route, req) {
     var response = null;
     var guid = route.name+route.testScope+route.testScenario;
 
@@ -130,9 +130,9 @@ function _routeResponse (route) {
                     jsonTemplate = route.jsonTemplate;
                 }
 				
-				if (route.data) {
-					dummyOptions.data = route.data;
-				}
+                dummyOptions.data = route.data || {};
+                dummyOptions.data.request = req;
+
 				if (route.helpers) {
 					dummyOptions.helpers = route.helpers;
 				}
