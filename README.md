@@ -39,7 +39,14 @@ var mockapi = mock({
 		testScenario: 1,
 		latency: 300,
 		jsonTemplate: [
-			function() { return //Scenario 0
+			function(){ //Scenario 0
+				var myMockObject = {
+					prop1: 'abc',
+					prop2: 123
+				}
+				return JSON.stringify(myMockObject);
+			},
+			function() { return //Scenario 1
 				'{'+
 					'"people": ['+
 					'{{#repeat 2}} {'+
@@ -59,7 +66,7 @@ var mockapi = mock({
 					'"tolerance": {{number '0' '2'}},'+
 				'}'; 
 			},
-			function() { return //Scenario 1
+			function() { return //Scenario 2
 				'{'+
 					'"people": ['+
 						'{{#repeat 300}} {'+
