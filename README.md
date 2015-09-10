@@ -99,8 +99,8 @@ var mockapi = mock({
 		};]
         },
         {
-		name: 'routeUsingCustomData',
-		mockRoute: '/api/customData',
+		name: 'routeUsingCustomDataAndRegexRoute',
+		mockRoute: '\/api\/.*\/customData',
 		testScope: 'success',
 		latency: '300-7000',
 		data: {
