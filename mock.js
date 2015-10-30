@@ -34,7 +34,14 @@ Mock.prototype.registerRoutes = function (req, res) {
     var found = false;
 
     for (var i = 0; i < routes.length; i++) {
-        if (req.path.match(routes[i].mockRoute) !== null) {
+        var matchingMethod = true;
+
+        if(typeof routes[i].method === 'string' || routes[i].method instanceof String){
+            matchingMethod = (routes[i].method.toLowerCase() === req.method.toLowerCase());
+        }
+
+        console.log(routes[i].mockRoute + ' - ' + req.method + ' - ' + routes[i].method)
+        if (req.path.match(routes[i].mockRoute) !== null && matchingMethod) {
 
             found = true;
 
