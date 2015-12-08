@@ -1,7 +1,7 @@
 ### Travis CI - Status
 [![Build Status](https://travis-ci.org/jeffflater/mock-json-api.svg)](https://travis-ci.org/jeffflater/mock-json-api)
 
-# mock-json-api
+mock-json-api
 ============
 
 NPM - Mock JSON API
