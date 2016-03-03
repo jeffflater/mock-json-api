@@ -21,9 +21,9 @@ Properties
     - **mockRoute**: The URL of the route to mock - a regex
     - **testScope**: The behavior of the route response; success, fail, or error
     - **errorBody**: The text that will be displayed in the response of any error thrown
-    - **testScenario**: Determines which JSON template to return in the array when testScope is "success"
+    - **testScenario**: Determines which JSON template to return in the array when testScope is "success" by either defining the index of the array or the name of the template
     - **latency**: in milliseconds.  Will delay the response by set number of miliseconds.  Can be a single number like 3000, a string like '3000' or a range of numbers as a string like '2000-7000'.  If a range, it will randomly select a number in that range on each request.
-    - **jsonTemplate**: The actual object to be returned from the mock route.  This will also tell node how to construct the dummy data the first time the route is requested.  It's simply an array of functions that return string representations of json objects laced with dummy json notation.
+    - **jsonTemplate**: The actual object to be returned from the mock route.  This will also tell node how to construct the dummy data the first time the route is requested.  It's simply an array of strings, functions or objects that return string representations of JSON objects laced with dummy JSON notation.
 	- **data**: Your own data to be used with dummy-json.
 	- **helpers**: Custom helpers to be used with dummy-json. Refer to the [dummy-json documention](https://github.com/webroo/dummy-json) for more information.
 
@@ -68,7 +68,7 @@ var mockapi = mock({
 						'{{/repeat}} ],'+
 					'"revision": {{uniqueIndex}},'+
 					'"tolerance": {{number '0' '2'}},'+
-				'}'; 
+				'}';
 			},
 			function() { return //Scenario 2
 				'{'+
@@ -88,18 +88,41 @@ var mockapi = mock({
 						'{{/repeat}} ],'+
 					'"revision": {{uniqueIndex}},'+
 					'"tolerance": {{number '0' '2'}},'+
-				'}'; 
+				'}';
             		};]
+        },
+        {
+          'namedScenario': function() { return //Scenario 3
+    				'{'+
+    					'"people": ['+
+    						'{{#repeat 300}} {'+
+    							'"id": {{index}},'+
+    							'"firstName": "{{firstName}}",'+
+    							'"lastName": "{{lastName}}",'+
+    							'"email": "{{email}}",'+
+    							'"work": "{{company}}",'+
+    							'"age": {{number 18 35}},'+
+    							'"optedin": {{boolean}}'+
+    						'} {{/repeat}}],'+
+    					'"images": ['+
+    						'{{#repeat 6 9}}'+
+    							'"img{{index}}.png"'+
+    						'{{/repeat}} ],'+
+    					'"revision": {{uniqueIndex}},'+
+    					'"tolerance": {{number '0' '2'}},'+
+    				'}';
+                		};]
+            }
         },
         {
 		name: 'anotherRoute',
 		mockRoute: '/api/bar',
 		testScope: 'fail',
-		jsonTemplate: [ function() { return 
+		jsonTemplate: [ function() { return
 			'{' +
 				'"name": "{{firstName}}",'+
 				'"age": {{number 18 65}}'+
-			'}'; 
+			'}';
 		};]
         },
         {
@@ -109,60 +132,60 @@ var mockapi = mock({
 		latency: '300-7000',
 		data: {
 			drawers: [
-				{name: 'Drawer 1', id: '1'}, 
-				{name: 'Drawer 2', id: '2'}, 
-				{name: 'Drawer 3', id: '3'}, 
+				{name: 'Drawer 1', id: '1'},
+				{name: 'Drawer 2', id: '2'},
+				{name: 'Drawer 3', id: '3'},
 				{name: 'Drawer 4', id: '4'}],
 			attributes: [{
-					PropertyType: 0, 
-					DisplayName: 'Bool', 
+					PropertyType: 0,
+					DisplayName: 'Bool',
 					Id: 'ir:attrdef_1'
 				},
 				{
-					PropertyType: 3, 
-					DisplayName: 'Date', 
+					PropertyType: 3,
+					DisplayName: 'Date',
 					Id: 'ir:attrdef_2'
 				},
 				{
-					PropertyType: 6, 
-					DisplayName: 'String', 
+					PropertyType: 6,
+					DisplayName: 'String',
 					Id: 'ir:attrdef_3'
 				},
 				{
-					PropertyType: 6, 
-					DisplayName: 'String with choices', 
-					Id: 'ir:attrdef_4', 
+					PropertyType: 6,
+					DisplayName: 'String with choices',
+					Id: 'ir:attrdef_4',
 					Choices: [{
-							DisplayName: 'Choice 1', 
+							DisplayName: 'Choice 1',
 							Value: 'Choice 1'
-						}, 
+						},
 						{
-							DisplayName: 'Choice 2', 
+							DisplayName: 'Choice 2',
 							Value: 'Choice 2'
 						}
 					]
 				},
 				{
-					PropertyType: 4, 
-					DisplayName: 'Attr Float no min max', 
-					Id: 'ir:attrdef_8', 
-					MaximumValue: 2147483647, 
+					PropertyType: 4,
+					DisplayName: 'Attr Float no min max',
+					Id: 'ir:attrdef_8',
+					MaximumValue: 2147483647,
 					MinimumValue: -2147483648
 				},
 				{
-					PropertyType: 1, 
-					DisplayName: 'Attr User', 
-					Id: 'ir:attrdef_11', 
+					PropertyType: 1,
+					DisplayName: 'Attr User',
+					Id: 'ir:attrdef_11',
 					Choices: [{
-							DisplayName: 'Corey', 
+							DisplayName: 'Corey',
 							Value: 'Corey'
-						}, 
+						},
 						{
-							DisplayName: 'Scott', 
+							DisplayName: 'Scott',
 							Value: 'Scott'
-						}, 
+						},
 						{
-							DisplayName: 'Derek', 
+							DisplayName: 'Derek',
 							Value: 'Derek'
 						}]
 				}]

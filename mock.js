@@ -90,7 +90,7 @@ Mock.prototype.registerRoutes = function (req, res) {
             	res.end();
             }, latency);
             /* jshint ignore:end */
-            
+
             break;
         }
     }
@@ -119,29 +119,53 @@ function _routeResponse (route, req) {
             var store = _getStore(guid);
             if (store === null || typeof store === 'undefined') {
                 var jsonTemplate = null;
-				var dummyOptions = {};
+				        var dummyOptions = {};
 
                 if (typeof route.jsonTemplate === 'object') {
 
-                    var scenario = parseInt(route.testScenario);
-                    if (isNaN(scenario)) {
-                        scenario = 0;
+                    /*
+                    handle case where testScenario is not defined,
+                    default to first testScenario
+                    */
+                    if (!route.testScenario) {
+                      route.testScenario = 0;
                     }
-                    if (route.jsonTemplate.length > scenario) {
+
+                    /*
+                    route.testScenario - can be type string OR int
+                    */
+
+                    // is the testScenario a string?
+                    if (typeof route.testScenario === 'string') {
+                      var templates = route.jsonTemplate;
+                      for (var template in templates) {
+                        if (templates[template].hasOwnProperty(route.testScenario)) {
+                          jsonTemplate = templates[template][route.testScenario]();
+                          break;
+                        }
+                      }
+                    }
+
+                    // is the testScenario an int?
+                    if (!isNaN(route.testScenario))
+                    {
+                      var scenario = parseInt(route.testScenario);
+                      if (route.jsonTemplate.length > scenario) {
                         jsonTemplate = route.jsonTemplate[scenario]();
+                      }
                     }
                 }
 
                 if (typeof route.jsonTemplate === 'string') {
                     jsonTemplate = route.jsonTemplate;
                 }
-				
+
                 dummyOptions.data = route.data || {};
                 dummyOptions.data.request = req;
 
-				if (route.helpers) {
-					dummyOptions.helpers = route.helpers;
-				}
+				        if (route.helpers) {
+                  dummyOptions.helpers = route.helpers;
+                }
 
                 //todo: use validator to enhance template validation
                 response = {
@@ -247,4 +271,3 @@ function _tryParseJSON (jsonString){
 
     return false;
 }
-
