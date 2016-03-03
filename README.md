@@ -40,7 +40,7 @@ var mockapi = mock({
 		name: 'myFirstRoute',
 		mockRoute: '/api/foo',
 		testScope: 'success',
-		testScenario: 1,
+		testScenario: 1, //array index
 		latency: 300,
 		jsonTemplate: [
 			function(){ //Scenario 0
