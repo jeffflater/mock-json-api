@@ -5,8 +5,10 @@ var dummyJson = require('dummy-json'),
     jsonStore = require('json-store'),
     validator = require('validator');
 
-var configOptions = ['jsonStore',
-    'mockRoutes'];
+var configOptions = [
+  'jsonStore',
+  'mockRoutes'
+];
 
 var routes,
     store;
@@ -122,7 +124,7 @@ function _routeResponse (route, req) {
 				        var dummyOptions = {};
 
                 if (typeof route.jsonTemplate === 'object') {
-
+                  
                     /*
                     handle case where testScenario is not defined,
                     default to first testScenario
@@ -132,8 +134,13 @@ function _routeResponse (route, req) {
                     }
 
                     /*
-                    route.testScenario - can be type string OR int
+                    route.testScenario - can be type function, string, or int
                     */
+
+                    // is the testScenario a function
+                    if (typeof route.testScenario === 'function') {
+                      route.testScenario = route.testScenario(req);
+                    }
 
                     // is the testScenario a string?
                     if (typeof route.testScenario === 'string') {
@@ -154,6 +161,7 @@ function _routeResponse (route, req) {
                         jsonTemplate = route.jsonTemplate[scenario]();
                       }
                     }
+
                 }
 
                 if (typeof route.jsonTemplate === 'string') {

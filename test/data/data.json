@@ -1,1 +1,1 @@
-{}
+{"fooSuccesssuccesssecond":"{ \"name\": \"Leanne\", \"age\": 29 }","fooSuccesssuccessfunction (req){\n                      if (req.body) {\n                        return 'second';\n                      }\n                      return 'first'; //defaults\n                    }":"{ \"name\": \"Leanne\", \"age\": 31 }","fooSuccesssuccessfunction (req){\n                      if (req.body) {\n                        return 1;\n                      }\n                      return 0; //defaults\n                    }":"{ \"name\": \"Leanne\", \"age\": 54 }"}
