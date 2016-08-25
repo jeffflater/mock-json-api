@@ -63,7 +63,7 @@ Mock.prototype.registerRoutes = function (req, res) {
                 
                 var latency = req.query.latency;
                 if (typeof latency !== 'undefined') {
-                    route.latency = testScenario;
+                    route.latency = latency;
                 }
             }
 
