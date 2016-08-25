@@ -69,9 +69,9 @@ Mock.prototype.registerRoutes = function (req, res) {
 
             var latency = 0;
             try {
-                if (routes[i].latency) {
-                    if (isNaN(routes[i].latency)) {
-                        var splits = routes[i].latency.split("-");
+                if (route.latency) {
+                    if (isNaN(route.latency)) {
+                        var splits = route.latency.split("-");
                         var min = parseInt(splits[0]);
                         var max = parseInt(splits[1]);
                         latency = Math.floor(Math.random()*(max-min+1)+min);
@@ -79,7 +79,7 @@ Mock.prototype.registerRoutes = function (req, res) {
                             latency = max;
                         }
                     } else {
-                        latency = routes[i].latency;
+                        latency = route.latency;
                     }
                 }
             }
