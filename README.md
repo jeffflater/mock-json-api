@@ -27,6 +27,11 @@ Properties
 	- **data**: Your own data to be used with dummy-json.
 	- **helpers**: Custom helpers to be used with dummy-json. Refer to the [dummy-json documention](https://github.com/webroo/dummy-json) for more information.
 
+On The Fly Modification
+- If you need to change scenario, scope or latency on the fly, just GET the route you want to modify and add the property you want to modify to the querystring with a new value.
+- Currently you can modify testScenario, testScope, and latecy values.
+- For example: ```http://myserver.com/api/route?testScenario=foo``` will change the scenario of the /api/route route to foo from whatever is set in the mock object.
+
 ```javascript
 var express = require('express');
 var mock = require('mock-json-api');
