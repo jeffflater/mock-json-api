@@ -34,13 +34,15 @@ function Mock(config) {
 Mock.prototype.registerRoutes = function (req, res) {
 
     var found = false;
+    var matchingMethod;
 
     for (var i = 0; i < routes.length; i++) {
-        var matchingMethod = true;
-
-        if(typeof routes[i].method === 'string' || routes[i].method instanceof String){
-            matchingMethod = (routes[i].method.toLowerCase() === req.method.toLowerCase());
+        
+        if (!(typeof routes[i].method === 'string' || routes[i].method instanceof String)) {
+            routes[i].method = 'get';
         }
+
+        matchingMethod = (routes[i].method.toLowerCase() === req.method.toLowerCase());
 
         if (req.path.match(routes[i].mockRoute) !== null && matchingMethod) {
 
