@@ -247,6 +247,14 @@ function _routeResponse (route, req) {
             };
             break;
 
+        //Simulates a successful response(204) - 10.2.5 204 No Content
+        case 'noContent':
+            response = {
+                status: 204,
+                body: route.errorBody ? route.errorBody : '10.2.5 204 No Content'
+            };
+            break;
+
         //Defaults to a successful response (200) - 10.2.1 200 OK
         default:
             response = {
