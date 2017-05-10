@@ -114,13 +114,14 @@ Mock.prototype.registerRoutes = function (req, res) {
 Mock.prototype.updateRoute = function (req, res) {
 
     var found = false,
+        find = null,
         route = null;
 
     // must contain a route and something to update it with
     if (req.body && req.body.route && req.body.update) {
 
         // assemble the find object
-        var find = {
+        find = {
             name: req.body.route.name ? req.body.route.name : null,
             testScope: req.body.route.scope ? req.body.route.scope : null,
             testScenario: req.body.route.scenario ? req.body.route.scenario : null

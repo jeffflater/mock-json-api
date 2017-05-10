@@ -13,7 +13,8 @@ module.exports = function(grunt) {
         },
         jshint: {
             options: {
-                reporter: require('jshint-stylish')
+                reporter: require('jshint-stylish'),
+                reporterOutput: ""
             },
             all: ['mock.js', 'test/specs/*.spec.js']
         },
