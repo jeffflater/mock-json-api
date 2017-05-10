@@ -33,8 +33,6 @@ function Mock(config) {
 
 Mock.prototype.registerRoutes = function (req, res) {
 
-    console.log('CALLED! ', req.path);
-
     var found = false;
     var matchingMethod;
 
