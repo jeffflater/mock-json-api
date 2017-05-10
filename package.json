@@ -1,6 +1,6 @@
 {
   "name": "mock-json-api",
-  "version": "0.1.7",
+  "version": "0.2.0",
   "description": "Mock json api for node",
   "main": "mock.js",
   "repository": {
@@ -19,18 +19,19 @@
   },
   "homepage": "http://mock-json-api.com",
   "devDependencies": {
+    "body-parser": "^1.17.1",
     "grunt": "^0.4.5",
+    "grunt-contrib-jshint": "^0.10.0",
     "jasmine-node-karma": "^1.6.1",
+    "jshint-stylish": "^0.4.0",
     "karma": "^0.12.17",
     "karma-jasmine": "^0.1.5",
     "request": "^2.38.0",
     "rootpath": "^0.1.2",
-    "validator": "^3.16.1",
-    "grunt-contrib-jshint": "^0.10.0",
-    "jshint-stylish": "^0.4.0"
+    "validator": "^3.16.1"
   },
   "dependencies": {
-    "dummy-json": "^1.0.1",
+    "dummy-json": "^2.0.0",
     "express": "~4.0.0",
     "json-store": "~0.0.1",
     "validator": "^3.16.1"

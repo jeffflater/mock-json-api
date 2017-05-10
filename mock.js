@@ -6,8 +6,8 @@ var dummyJson = require('dummy-json'),
     validator = require('validator');
 
 var configOptions = [
-  'jsonStore',
-  'mockRoutes'
+    'jsonStore',
+    'mockRoutes'
 ];
 
 var routes,
@@ -33,11 +33,13 @@ function Mock(config) {
 
 Mock.prototype.registerRoutes = function (req, res) {
 
+    console.log('CALLED! ', req.path);
+
     var found = false;
     var matchingMethod;
 
     for (var i = 0; i < routes.length; i++) {
-        
+
         if (!(typeof routes[i].method === 'string' || routes[i].method instanceof String)) {
             routes[i].method = 'get';
         }
@@ -62,7 +64,7 @@ Mock.prototype.registerRoutes = function (req, res) {
                 if (typeof testScenario !== 'undefined') {
                     route.testScenario = testScenario;
                 }
-                
+
                 var testLatency = req.query.latency;
                 if (typeof testLatency !== 'undefined') {
                     route.latency = testLatency;
@@ -94,9 +96,9 @@ Mock.prototype.registerRoutes = function (req, res) {
 
             /* jshint ignore:start */
             setTimeout(function(){
-            	res.set('Content-Type', 'application/json');
+                res.set('Content-Type', 'application/json');
                 res.status(response.status).send(response.body);
-            	res.end();
+                res.end();
             }, latency);
             /* jshint ignore:end */
 
@@ -108,6 +110,57 @@ Mock.prototype.registerRoutes = function (req, res) {
         res.end();  //no routes found, end here!
     }
 };
+
+Mock.prototype.updateRoute = function (req, res) {
+
+    var found = false,
+        route = null;
+
+    // must contain a route and something to update it with
+    if (req.body && req.body.route && req.body.update) {
+
+        // assemble the find object
+        var find = {
+            name: req.body.route.name ? req.body.route.name : null,
+            testScope: req.body.route.scope ? req.body.route.scope : null,
+            testScenario: req.body.route.scenario ? req.body.route.scenario : null
+        };
+
+        // the route must be defined as name, test scope, and test scenario
+        if (find.name && find.testScope && find.testScenario) {
+            var update = {
+                testScenario: req.body.update.scenario ? req.body.update.scenario : null
+            };
+            // must at least contain a new scenario
+            if (update.testScenario) {
+                for (var i=0; i < routes.length; i++) {
+                    // attempt to find the existing route
+                    if (routes[i].name === find.name &&
+                        routes[i].testScope === find.testScope &&
+                        routes[i].testScenario === find.testScenario) {
+                        // flag as found / updated
+                        found = true;
+                        // update the new scenario
+                        routes[i].testScenario = update.testScenario;
+                        // set route to be returned (from ths call)
+                        route = routes[i];
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    res.send({
+        status: found ? 200 : 404,
+        body: {
+            message: found ? 'route updated.' : 'route not found.',
+            route: found ? route : find
+        }
+    });
+
+};
+
 
 module.exports = function (config) {
     return new Mock(config);
@@ -128,45 +181,45 @@ function _routeResponse (route, req) {
             var store = _getStore(guid);
             if (store === null || typeof store === 'undefined') {
                 var jsonTemplate = null;
-				        var dummyOptions = {};
+                var dummyOptions = {};
 
                 if (typeof route.jsonTemplate === 'object') {
-                  
+
                     /*
-                    handle case where testScenario is not defined,
-                    default to first testScenario
-                    */
+                     handle case where testScenario is not defined,
+                     default to first testScenario
+                     */
                     if (!route.testScenario) {
-                      route.testScenario = 0;
+                        route.testScenario = 0;
                     }
 
                     /*
-                    route.testScenario - can be type function, string, or int
-                    */
+                     route.testScenario - can be type function, string, or int
+                     */
 
                     // is the testScenario a function
                     if (typeof route.testScenario === 'function') {
-                      route.testScenario = route.testScenario(req);
+                        route.testScenario = route.testScenario(req);
                     }
 
                     // is the testScenario a string?
                     if (typeof route.testScenario === 'string') {
-                      var templates = route.jsonTemplate;
-                      for (var template in templates) {
-                        if (templates[template].hasOwnProperty(route.testScenario)) {
-                          jsonTemplate = templates[template][route.testScenario]();
-                          break;
+                        var templates = route.jsonTemplate;
+                        for (var template in templates) {
+                            if (templates[template].hasOwnProperty(route.testScenario)) {
+                                jsonTemplate = templates[template][route.testScenario]();
+                                break;
+                            }
                         }
-                      }
                     }
 
                     // is the testScenario an int?
                     if (!isNaN(route.testScenario))
                     {
-                      var scenario = parseInt(route.testScenario);
-                      if (route.jsonTemplate.length > scenario) {
-                        jsonTemplate = route.jsonTemplate[scenario]();
-                      }
+                        var scenario = parseInt(route.testScenario);
+                        if (route.jsonTemplate.length > scenario) {
+                            jsonTemplate = route.jsonTemplate[scenario]();
+                        }
                     }
 
                 }
@@ -178,14 +231,16 @@ function _routeResponse (route, req) {
                 dummyOptions.data = route.data || {};
                 dummyOptions.data.request = req;
 
-				        if (route.helpers) {
-                  dummyOptions.helpers = route.helpers;
+                if (route.helpers) {
+                    dummyOptions.helpers = route.helpers;
                 }
 
                 //todo: use validator to enhance template validation
+                var result = dummyJson.parse(jsonTemplate, dummyOptions);
+
                 response = {
                     status: 200,
-                    body: _setStore(guid, dummyJson.parse(jsonTemplate, dummyOptions))
+                    body: _setStore(guid, result)
                 };
             } else {
                 response = {
@@ -193,8 +248,6 @@ function _routeResponse (route, req) {
                     body: store
                 };
             }
-
-            //todo: use validator to enhance response validation
 
             break;
 

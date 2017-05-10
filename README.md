@@ -66,7 +66,7 @@ var mockapi = mock({
 						'"lastName": "{{lastName}}",'+
 						'"email": "{{email}}",'+
 						'"work": "{{company}}",'+
-						'"age": {{number 20 50}},'+
+						'"age": {{int 20 50}},'+
 						'"optedin": {{boolean}}'+
 					'} {{/repeat}}],'+
 					'"images": ['+
@@ -74,7 +74,7 @@ var mockapi = mock({
 							'"img{{index}}.png"'+
 						'{{/repeat}} ],'+
 					'"revision": {{uniqueIndex}},'+
-					'"tolerance": {{number '0' '2'}},'+
+					'"tolerance": {{int '0' '2'}},'+
 				'}';
 			},
 			function() { return //Scenario 2
@@ -86,7 +86,7 @@ var mockapi = mock({
 							'"lastName": "{{lastName}}",'+
 							'"email": "{{email}}",'+
 							'"work": "{{company}}",'+
-							'"age": {{number 18 35}},'+
+							'"age": {{int 18 35}},'+
 							'"optedin": {{boolean}}'+
 						'} {{/repeat}}],'+
 					'"images": ['+
@@ -94,7 +94,7 @@ var mockapi = mock({
 							'"img{{index}}.png"'+
 						'{{/repeat}} ],'+
 					'"revision": {{uniqueIndex}},'+
-					'"tolerance": {{number '0' '2'}},'+
+					'"tolerance": {{int '0' '2'}},'+
 				'}';
             		};]
         },
@@ -108,7 +108,7 @@ var mockapi = mock({
     							'"lastName": "{{lastName}}",'+
     							'"email": "{{email}}",'+
     							'"work": "{{company}}",'+
-    							'"age": {{number 18 35}},'+
+    							'"age": {{int 18 35}},'+
     							'"optedin": {{boolean}}'+
     						'} {{/repeat}}],'+
     					'"images": ['+
@@ -116,7 +116,7 @@ var mockapi = mock({
     							'"img{{index}}.png"'+
     						'{{/repeat}} ],'+
     					'"revision": {{uniqueIndex}},'+
-    					'"tolerance": {{number '0' '2'}},'+
+    					'"tolerance": {{int '0' '2'}},'+
     				'}';
                 		};]
             }
@@ -128,7 +128,7 @@ var mockapi = mock({
 		jsonTemplate: [ function() { return
 			'{' +
 				'"name": "{{firstName}}",'+
-				'"age": {{number 18 65}}'+
+				'"age": {{int 18 65}}'+
 			'}';
 		};]
         },
@@ -205,7 +205,7 @@ var mockapi = mock({
 				'       "fileTypes":' +
 				'           [' +
 				'               {{#repeat 1 5}}' +
-				'               {{number 5}}' +
+				'               {{int 5}}' +
 				'               {{/repeat}}' +
 				'           ],' +
 				'       "id":"{{this.id}}",' +

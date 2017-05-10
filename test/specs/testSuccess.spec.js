@@ -32,9 +32,9 @@ describe("Test Mock Success Scenarios", function() {
 
     it("Test successful response for mock api/fooSuccess NOT using queryString parameters with multiple templates defining the test scenario", function(done){
 
-        var testTemplate1 = function(){ return '{ "name": "{{firstName}}", "age": {{number 18 65}} }'; };
-        var testTemplate2 = function(){ return '{ "name": "{{firstName}}", "age": {{number 18 65}} }'; };
-        var testTemplate3 = function(){ return '{ "name": "{{firstName}}", "age": {{number 18 65}} }'; };
+        var testTemplate1 = function(){ return '{ "name": "{{firstName}}", "age": {{int 18 65}} }'; };
+        var testTemplate2 = function(){ return '{ "name": "{{firstName}}", "age": {{int 18 65}} }'; };
+        var testTemplate3 = function(){ return '{ "name": "{{firstName}}", "age": {{int 18 65}} }'; };
 
         var routes = mock({
             jsonStore: 'test/data/data.json',
@@ -54,6 +54,8 @@ describe("Test Mock Success Scenarios", function() {
         var url = baseUrl+':'+port+routePath;
 
         request(url, function(error, response, body){
+            console.log('error ', error);
+            console.log('response.statusCode ', response.statusCode);
             expect(validator.isJSON(body)).toEqual(true);
             expect(response.statusCode).toEqual(statusCode);
             done();
@@ -63,9 +65,9 @@ describe("Test Mock Success Scenarios", function() {
 
     it("Test successful response for mock api/fooSuccess using scope/scenario queryString parameters with multiple templates defining the test scenario", function(done){
 
-        var testTemplate1 = function(){ return '{ "name": "{{firstName}}", "age": {{number 18 65}} }'; };
-        var testTemplate2 = function(){ return '{ "name": "{{firstName}}", "age": {{number 18 65}} }'; };
-        var testTemplate3 = function(){ return '{ "name": "{{firstName}}", "age": {{number 18 65}} }'; };
+        var testTemplate1 = function(){ return '{ "name": "{{firstName}}", "age": {{int 18 65}} }'; };
+        var testTemplate2 = function(){ return '{ "name": "{{firstName}}", "age": {{int 18 65}} }'; };
+        var testTemplate3 = function(){ return '{ "name": "{{firstName}}", "age": {{int 18 65}} }'; };
 
         var routes = mock({
             jsonStore: 'test/data/data.json',
@@ -92,9 +94,9 @@ describe("Test Mock Success Scenarios", function() {
 
     it("Test successful response for mock api/fooSuccess NOT using queryString parameters with multiple templates NOT defining the test scenario", function(done){
 
-        var testTemplate1 = function(){ return '{ "name": "{{firstName}}", "age": {{number 18 65}} }'; };
-        var testTemplate2 = function(){ return '{ "name": "{{firstName}}", "age": {{number 18 65}} }'; };
-        var testTemplate3 = function(){ return '{ "name": "{{firstName}}", "age": {{number 18 65}} }'; };
+        var testTemplate1 = function(){ return '{ "name": "{{firstName}}", "age": {{int 18 65}} }'; };
+        var testTemplate2 = function(){ return '{ "name": "{{firstName}}", "age": {{int 18 65}} }'; };
+        var testTemplate3 = function(){ return '{ "name": "{{firstName}}", "age": {{int 18 65}} }'; };
 
         var routes = mock({
             jsonStore: 'test/data/data.json',
@@ -122,9 +124,9 @@ describe("Test Mock Success Scenarios", function() {
 
     it("Test successful response for mock api/fooSuccess using scope/scenario queryString parameters with multiple templates NOT defining the test scenario", function(done){
 
-        var testTemplate1 = function(){ return '{ "name": "{{firstName}}", "age": {{number 18 65}} }'; };
-        var testTemplate2 = function(){ return '{ "name": "{{firstName}}", "age": {{number 18 65}} }'; };
-        var testTemplate3 = function(){ return '{ "name": "{{firstName}}", "age": {{number 18 65}} }'; };
+        var testTemplate1 = function(){ return '{ "name": "{{firstName}}", "age": {{int 18 65}} }'; };
+        var testTemplate2 = function(){ return '{ "name": "{{firstName}}", "age": {{int 18 65}} }'; };
+        var testTemplate3 = function(){ return '{ "name": "{{firstName}}", "age": {{int 18 65}} }'; };
 
         var routes = mock({
             jsonStore: 'test/data/data.json',
@@ -151,7 +153,7 @@ describe("Test Mock Success Scenarios", function() {
 
     it("Test successful response for mock api/fooSuccess NOT using queryString parameters for a single template NOT wrapped in a function", function(done){
 
-        var testTemplate = '{ "name": "{{firstName}}", "age": {{number 18 65}} }';
+        var testTemplate = '{ "name": "{{firstName}}", "age": {{int 18 65}} }';
 
         var routes = mock({
             jsonStore: 'test/data/data.json',
@@ -178,7 +180,7 @@ describe("Test Mock Success Scenarios", function() {
 
     it("Test successful response for mock api/fooSuccess using queryString parameters for a single template NOT wrapped in a function", function(done){
 
-        var testTemplate = '{ "name": "{{firstName}}", "age": {{number 18 65}} }';
+        var testTemplate = '{ "name": "{{firstName}}", "age": {{int 18 65}} }';
 
         var routes = mock({
             jsonStore: 'test/data/data.json',
@@ -204,7 +206,7 @@ describe("Test Mock Success Scenarios", function() {
 
     it("Test successful response for mock api/fooSuccess NOT using queryString parameters for a single template wrapped in a function", function(done){
 
-        var testTemplate = function(){ return '{ "name": "{{firstName}}", "age": {{number 18 65}} }'; };
+        var testTemplate = function(){ return '{ "name": "{{firstName}}", "age": {{int 18 65}} }'; };
 
         var routes = mock({
             jsonStore: 'test/data/data.json',
@@ -232,7 +234,7 @@ describe("Test Mock Success Scenarios", function() {
 
     it("Test successful response for mock api/fooSuccess using queryString parameters for a single template wrapped in a function", function(done){
 
-        var testTemplate = function(){ return '{ "name": "{{firstName}}", "age": {{number 18 65}} }'; };
+        var testTemplate = function(){ return '{ "name": "{{firstName}}", "age": {{int 18 65}} }'; };
 
         var routes = mock({
             jsonStore: 'test/data/data.json',

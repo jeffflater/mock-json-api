@@ -28,7 +28,7 @@ describe("Test Mock Misuse Scenarios", function() {
 
     it("Test malformed JSON template", function(done){
 
-        var testTemplate = ' "name": "{{firstName}}", "age: {{number XX 55}} }';
+        var testTemplate = ' "name": "{{firstName}}", "age: {{int XX 55}} }';
 
         try {
 
