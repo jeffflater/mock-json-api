@@ -96,7 +96,33 @@ describe("Test Mock Scenario Types", function() {
                 request(url, function(error, response, body){
 
                     expect(response.statusCode).toEqual(errorCode);
-                    done();
+
+                    formData.route.scope = 'error';
+                    formData.update.scope = 'success';
+
+                    console.log(formData)
+
+                    request.post({url: updateUrl, form: formData}, function(error, response, body){
+                        expect(validator.isJSON(body)).toEqual(true);
+                        expect(response.statusCode).toEqual(statusCode);
+
+                        var data = JSON.parse(body);
+                        expect(data.body.route.testScenario).toEqual(formData.update.scenario);
+
+                        request(url, function(error, response, body){
+
+                            expect(validator.isJSON(body)).toEqual(true);
+                            expect(response.statusCode).toEqual(statusCode);
+
+                            var data = JSON.parse(body);
+                            expect(data.name).toEqual(formData.update.scenario);
+
+                            done();
+                        });
+
+                    });
+
+
                 });
 
             });
