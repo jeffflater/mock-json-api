@@ -128,7 +128,8 @@ Mock.prototype.updateRoute = function (req, res) {
         // the route must be defined as name, test scope, and test scenario
         if (find.name && find.testScope && find.testScenario) {
             var update = {
-                testScenario: req.body.update.scenario ? req.body.update.scenario : null
+                testScenario: req.body.update.scenario ? req.body.update.scenario : null,
+                testScope: req.body.update.scope ? req.body.update.scope : null
             };
             // must at least contain a new scenario
             if (update.testScenario) {
@@ -141,6 +142,10 @@ Mock.prototype.updateRoute = function (req, res) {
                         found = true;
                         // update the new scenario
                         routes[i].testScenario = update.testScenario;
+                        // update the new scope
+                        if (update.testScope) {
+                            routes[i].testScope = update.testScope;
+                        }
                         // set route to be returned (from ths call)
                         route = routes[i];
                         break;
