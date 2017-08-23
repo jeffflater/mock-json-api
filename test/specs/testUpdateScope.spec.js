@@ -100,8 +100,6 @@ describe("Test Mock Scenario Types", function() {
                     formData.route.scope = 'error';
                     formData.update.scope = 'success';
 
-                    console.log(formData)
-
                     request.post({url: updateUrl, form: formData}, function(error, response, body){
                         expect(validator.isJSON(body)).toEqual(true);
                         expect(response.statusCode).toEqual(statusCode);
