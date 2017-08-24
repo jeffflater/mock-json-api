@@ -109,6 +109,48 @@ Mock.prototype.registerRoutes = function (req, res) {
     }
 };
 
+Mock.prototype.setRouteScenario = function (req, res) {
+
+    var found = false;
+    var route = null;
+
+    var config = {
+        name: req.body.name ? req.body.name : null,
+        testScope: req.body.scope ? req.body.scope : null,
+        testScenario: req.body.scenario ? req.body.scenario : null,
+        testMethod: req.body.method ? req.body.method : null
+    };
+
+    for (var i=0; i < routes.length; i++) {
+        // attempt to find the existing route
+        if (routes[i].name === config.name) {
+            // flag as found
+            found = true;
+            // update the new scenario
+            routes[i].testScenario = config.testScenario;
+            // update the new scope
+            if (config.testScope) {
+                routes[i].testScope = config.testScope;
+            }
+            if (config.testMethod) {
+                routes[i].testMethod = config.testMethod;
+            }
+            // set route to be returned (from ths call)
+            route = routes[i];
+            break;
+        }
+    }
+
+    res.send({
+        status: found ? 200 : 404,
+        body: {
+            message: found ? 'mock route updated.' : 'mock route name not found.',
+            route: config ? route : config
+        }
+    });
+
+};
+
 Mock.prototype.updateRoute = function (req, res) {
 
     var found = false,
