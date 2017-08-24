@@ -151,62 +151,6 @@ Mock.prototype.setRouteScenario = function (req, res) {
 
 };
 
-Mock.prototype.updateRoute = function (req, res) {
-
-    var found = false,
-        find = null,
-        route = null;
-
-    // must contain a route and something to update it with
-    if (req.body && req.body.route && req.body.update) {
-
-        // assemble the find object
-        find = {
-            name: req.body.route.name ? req.body.route.name : null,
-            testScope: req.body.route.scope ? req.body.route.scope : null,
-            testScenario: req.body.route.scenario ? req.body.route.scenario : null
-        };
-
-        // the route must be defined as name, test scope, and test scenario
-        if (find.name && find.testScope && find.testScenario) {
-            var update = {
-                testScenario: req.body.update.scenario ? req.body.update.scenario : null,
-                testScope: req.body.update.scope ? req.body.update.scope : null
-            };
-            // must at least contain a new scenario
-            if (update.testScenario) {
-                for (var i=0; i < routes.length; i++) {
-                    // attempt to find the existing route
-                    if (routes[i].name === find.name &&
-                        routes[i].testScope === find.testScope &&
-                        routes[i].testScenario === find.testScenario) {
-                        // flag as found / updated
-                        found = true;
-                        // update the new scenario
-                        routes[i].testScenario = update.testScenario;
-                        // update the new scope
-                        if (update.testScope) {
-                            routes[i].testScope = update.testScope;
-                        }
-                        // set route to be returned (from ths call)
-                        route = routes[i];
-                        break;
-                    }
-                }
-            }
-        }
-    }
-
-    res.send({
-        status: found ? 200 : 404,
-        body: {
-            message: found ? 'route updated.' : 'route not found.',
-            route: found ? route : find
-        }
-    });
-
-};
-
 
 module.exports = function (config) {
     return new Mock(config);
