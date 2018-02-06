@@ -273,6 +273,14 @@ function _routeResponse (route, req) {
                 body: route.errorBody ? route.errorBody : '10.4.4 403 Forbidden'
             };
             break;
+            
+        //Simulates a bad response (409) - 10.4.10 409 Bad Request
+        case 'conflict':
+            response = {
+                status: 409,
+                body: route.errorBody ? route.errorBody : '10.4.10 409 Conflict'
+            };
+            break;
 
         //Simulates a bad response (400) - 10.4.1 400 Bad Request
         case 'badRequest':
