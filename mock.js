@@ -197,7 +197,7 @@ function _routeResponse (route, req) {
                         var templates = route.jsonTemplate;
                         for (var template in templates) {
                             if (templates[template].hasOwnProperty(route.testScenario)) {
-                                jsonTemplate = templates[template][route.testScenario]();
+                                jsonTemplate = templates[template][route.testScenario](req);
                                 break;
                             }
                         }
