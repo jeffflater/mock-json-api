@@ -32,7 +32,7 @@
   },
   "dependencies": {
     "dummy-json": "^2.0.0",
-    "express": "~4.0.0",
+    "express": "^4.0.0",
     "json-store": "~0.0.1",
     "validator": "^3.16.1"
   },
