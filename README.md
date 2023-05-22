@@ -31,7 +31,7 @@ Properties
 On The Fly Modification
 - If you need to change scenario, scope or latency on the fly, just GET the route you want to modify and add the property you want to modify to the querystring with a new value.
 - Currently you can modify testScenario(?scenario=), testScope(?scope=), and latency(?latency=) values.
-- For example: ```http://myserver.com/api/route?testScenario=foo``` will change the scenario of the /api/route route to foo from whatever is set in the mock object.
+- For example: ```http://myserver.com/api/route?scenario=foo``` will change the scenario of the /api/route route to foo from whatever is set in the mock object.
 
 ```javascript
 var express = require('express');
