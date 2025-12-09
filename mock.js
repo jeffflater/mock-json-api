@@ -184,7 +184,7 @@ Mock.prototype.registerRoutes = function(req, res, next) {
         }
     }
 
-    // Second pass: check regex/exact routes
+    // Second pass: check regex routes (original behavior)
     if (!found) {
         for (let i = 0; i < this.routes.length; i++) {
             const route = this.routes[i];
@@ -203,23 +203,11 @@ Mock.prototype.registerRoutes = function(req, res, next) {
                 const urlLower = urlPath.toLowerCase();
                 const routePattern = route.mockRoute.toLowerCase();
 
-                // Check if it's a regex pattern (contains regex special chars)
-                const isRegex = /[\\^$*+?.()|[\]{}]/.test(routePattern);
-
-                if (isRegex) {
-                    // Regex matching
-                    if (urlLower.match(routePattern) !== null) {
-                        found = true;
-                        matchedRoute = route;
-                        break;
-                    }
-                } else {
-                    // Exact matching for simple routes
-                    if (urlLower === routePattern) {
-                        found = true;
-                        matchedRoute = route;
-                        break;
-                    }
+                // Regex matching (original behavior)
+                if (urlLower.match(routePattern) !== null) {
+                    found = true;
+                    matchedRoute = route;
+                    break;
                 }
             }
         }
