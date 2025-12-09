@@ -1,221 +1,342 @@
 /**
- * Created by jeff.flater on 4/23/2014.
+ * mock-json-api
+ * A mock JSON API server for Node.js with scenario support
  */
-var dummyJson = require('dummy-json'),
-    jsonStore = require('json-store'),
-    validator = require('validator');
+const dummyJson = require('dummy-json');
+const cors = require('cors');
+const express = require('express');
+const { match } = require('path-to-regexp');
+const fs = require('fs');
+const path = require('path');
 
-var configOptions = [
-    'jsonStore',
-    'mockRoutes'
-];
+const configOptions = ['mockRoutes'];
 
-var routes,
-    store;
+/**
+ * In-memory data store with optional file persistence
+ */
+class DataStore {
+    constructor(filePath) {
+        this.filePath = filePath;
+        this.data = {};
+        this._loadFromFile();
+    }
+
+    _loadFromFile() {
+        if (this.filePath && fs.existsSync(this.filePath)) {
+            try {
+                const content = fs.readFileSync(this.filePath, 'utf8');
+                this.data = JSON.parse(content);
+            } catch (err) {
+                this.data = {};
+            }
+        }
+    }
+
+    _saveToFile() {
+        if (this.filePath) {
+            try {
+                const dir = path.dirname(this.filePath);
+                if (!fs.existsSync(dir)) {
+                    fs.mkdirSync(dir, { recursive: true });
+                }
+                fs.writeFileSync(this.filePath, JSON.stringify(this.data, null, 2));
+            } catch (err) {
+                console.error('Error saving to file:', err);
+            }
+        }
+    }
+
+    get(key) {
+        return this.data[key];
+    }
+
+    set(key, value) {
+        this.data[key] = value;
+        this._saveToFile();
+        return value;
+    }
+
+    clear() {
+        this.data = {};
+        this._saveToFile();
+    }
+}
 
 function Mock(config) {
     // Validate JSON object
-    //todo: replace with validator
-    if (!_tryParseJSON(JSON.stringify(config))) {
-        throw 'Invalid json config object!';
+    if (!config || typeof config !== 'object') {
+        throw new Error('Invalid config object!');
     }
 
-    // Validate config options
-    for (var i=0; i < configOptions.length; i++) {
+    // Validate required config options
+    for (let i = 0; i < configOptions.length; i++) {
         if (!config.hasOwnProperty(configOptions[i])) {
-            throw 'Missing required config options';
+            throw new Error(`Missing required config option: ${configOptions[i]}`);
         }
     }
 
-    store = jsonStore(config.jsonStore);
-    routes = config.mockRoutes;
-}
+    this.store = new DataStore(config.jsonStore);
+    this.routes = config.mockRoutes;
+    this.config = config;
 
-Mock.prototype.registerRoutes = function (req, res) {
+    // Store original route configurations for reset
+    this.originalRoutes = JSON.parse(JSON.stringify(
+        config.mockRoutes.map(r => ({
+            name: r.name,
+            testScope: r.testScope,
+            testScenario: r.testScenario
+        }))
+    ));
 
-    var found = false;
-    var matchingMethod;
-
-    for (var i = 0; i < routes.length; i++) {
-
-        if (!(typeof routes[i].method === 'string' || routes[i].method instanceof String)) {
-            routes[i].method = 'get';
-        }
-
-        matchingMethod = (routes[i].method.toLowerCase() === req.method.toLowerCase());
-
-        if (routes[i].mockRoute && req.originalUrl.toLowerCase().match(routes[i].mockRoute.toLowerCase()) !== null && matchingMethod) {
-
-            found = true;
-
-            var route = routes[i];
-
-            //If scope & scenario is passed via the url; then, overwrite the testScope & testScenario properties
-            if (typeof req.query !== 'undefined') {
-
-                var testScope = req.query.scope;
-                if (typeof testScope !== 'undefined') {
-                    route.testScope = testScope;
-                }
-
-                var testScenario = req.query.scenario;
-                if (typeof testScenario !== 'undefined') {
-                    route.testScenario = testScenario;
-                }
-
-                var testLatency = req.query.latency;
-                if (typeof testLatency !== 'undefined') {
-                    route.latency = testLatency;
-                }
-            }
-
-            var latency = 0;
+    // Pre-compile route matchers for path-to-regexp style routes
+    this.routes.forEach(route => {
+        if (route.mockRoute && !route.mockRoute.includes('(') && route.mockRoute.includes(':')) {
+            // Express-style route with params (e.g., /api/leagues/:id)
             try {
-                if (route.latency) {
-                    if (isNaN(route.latency)) {
-                        var splits = route.latency.split("-");
-                        var min = parseInt(splits[0]);
-                        var max = parseInt(splits[1]);
-                        latency = Math.floor(Math.random()*(max-min+1)+min);
-                        if (latency > max){
-                            latency = max;
-                        }
-                    } else {
-                        latency = route.latency;
-                    }
-                }
+                route._matcher = match(route.mockRoute, { decode: decodeURIComponent });
+                route._isParamRoute = true;
+            } catch (e) {
+                route._isParamRoute = false;
             }
-            catch(err) {
-                console.log(err);
-                latency = 0;
-            }
-
-            var response = _routeResponse(route, req);
-
-            /* jshint ignore:start */
-            setTimeout(function(){
-                res.set('Content-Type', 'application/json');
-                res.status(response.status).send(response.body);
-                res.end();
-            }, latency);
-            /* jshint ignore:end */
-
-            break;
-        }
-    }
-
-    if(!found) {
-        res.end();  //no routes found, end here!
-    }
-};
-
-Mock.prototype.setRouteScenario = function (req, res) {
-
-    var found = false;
-    var route = null;
-
-    var config = {
-        name: req.body.name ? req.body.name : null,
-        testScope: req.body.scope ? req.body.scope : null,
-        testScenario: req.body.scenario ? req.body.scenario : null,
-        testMethod: req.body.method ? req.body.method : null
-    };
-
-    for (var i=0; i < routes.length; i++) {
-        // attempt to find the existing route
-        if (routes[i].name === config.name) {
-            // flag as found
-            found = true;
-            // update the new scenario
-            routes[i].testScenario = config.testScenario;
-            // update the new scope
-            if (config.testScope) {
-                routes[i].testScope = config.testScope;
-            }
-            if (config.testMethod) {
-                routes[i].testMethod = config.testMethod;
-            }
-            // set route to be returned (from ths call)
-            route = routes[i];
-            break;
-        }
-    }
-
-    res.send({
-        status: found ? 200 : 404,
-        body: {
-            message: found ? 'mock route updated.' : 'mock route name not found.',
-            route: config ? route : config
+        } else {
+            route._isParamRoute = false;
         }
     });
+}
 
+/**
+ * Create Express middleware with CORS and body parsing
+ */
+Mock.prototype.createServer = function() {
+    const app = express();
+
+    // CORS support
+    if (this.config.cors !== false) {
+        const corsOptions = typeof this.config.cors === 'object' ? this.config.cors : {};
+        app.use(cors(corsOptions));
+    }
+
+    // Body parsing
+    app.use(express.json());
+    app.use(express.urlencoded({ extended: true }));
+
+    // Reset endpoint
+    app.post('/_reset', (req, res) => {
+        this.reset();
+        res.json({ success: true, message: 'Mock server state reset' });
+    });
+
+    // Set route scenario endpoint
+    app.post('/_scenario', (req, res) => {
+        this.setRouteScenario(req, res);
+    });
+
+    // Register mock routes
+    app.use((req, res, next) => {
+        this.registerRoutes(req, res, next);
+    });
+
+    return app;
 };
 
+/**
+ * Reset all state to initial configuration
+ */
+Mock.prototype.reset = function() {
+    // Clear the data store
+    this.store.clear();
 
-module.exports = function (config) {
-    return new Mock(config);
+    // Reset all routes to original configuration
+    this.originalRoutes.forEach(original => {
+        const route = this.routes.find(r => r.name === original.name);
+        if (route) {
+            route.testScope = original.testScope;
+            route.testScenario = original.testScenario;
+        }
+    });
 };
 
-/*
- * PRIVATE METHODS
- * */
+Mock.prototype.registerRoutes = function(req, res, next) {
+    let found = false;
+    let matchedRoute = null;
+    let extractedParams = {};
 
-function _routeResponse (route, req) {
-    var response = null;
-    var guid = route.name+route.testScope+route.testScenario;
+    for (let i = 0; i < this.routes.length; i++) {
+        const route = this.routes[i];
+
+        if (!(typeof route.method === 'string' || route.method instanceof String)) {
+            route.method = 'get';
+        }
+
+        const matchingMethod = (route.method.toLowerCase() === req.method.toLowerCase());
+
+        if (!matchingMethod) continue;
+
+        // Try path-to-regexp matching first for parameterized routes
+        if (route._isParamRoute && route._matcher) {
+            const urlPath = req.originalUrl.split('?')[0]; // Remove query string
+            const matchResult = route._matcher(urlPath);
+            if (matchResult) {
+                found = true;
+                matchedRoute = route;
+                extractedParams = matchResult.params || {};
+                break;
+            }
+        }
+        // Fall back to regex matching
+        else if (route.mockRoute) {
+            const urlPath = req.originalUrl.toLowerCase();
+            const routePattern = route.mockRoute.toLowerCase();
+            if (urlPath.match(routePattern) !== null) {
+                found = true;
+                matchedRoute = route;
+                break;
+            }
+        }
+    }
+
+    if (!found) {
+        if (next) {
+            next();
+        } else {
+            res.status(404).json({ error: 'Route not found' });
+        }
+        return;
+    }
+
+    // Merge extracted params into req.params
+    req.params = { ...req.params, ...extractedParams };
+
+    const route = matchedRoute;
+
+    // Override from query parameters
+    if (typeof req.query !== 'undefined') {
+        if (typeof req.query.scope !== 'undefined') {
+            route.testScope = req.query.scope;
+        }
+        if (typeof req.query.scenario !== 'undefined') {
+            route.testScenario = req.query.scenario;
+        }
+        if (typeof req.query.latency !== 'undefined') {
+            route.latency = req.query.latency;
+        }
+    }
+
+    // Calculate latency
+    let latency = 0;
+    try {
+        if (route.latency) {
+            if (isNaN(route.latency)) {
+                const splits = route.latency.split('-');
+                const min = parseInt(splits[0]);
+                const max = parseInt(splits[1]);
+                latency = Math.floor(Math.random() * (max - min + 1) + min);
+                if (latency > max) {
+                    latency = max;
+                }
+            } else {
+                latency = parseInt(route.latency);
+            }
+        }
+    } catch (err) {
+        console.error('Error calculating latency:', err);
+        latency = 0;
+    }
+
+    const response = this._routeResponse(route, req);
+
+    setTimeout(() => {
+        res.set('Content-Type', 'application/json');
+        res.status(response.status).send(response.body);
+    }, latency);
+};
+
+Mock.prototype.setRouteScenario = function(req, res) {
+    let found = false;
+    let route = null;
+
+    const config = {
+        name: req.body.name || null,
+        testScope: req.body.scope || null,
+        testScenario: req.body.scenario || null,
+        testMethod: req.body.method || null
+    };
+
+    for (let i = 0; i < this.routes.length; i++) {
+        if (this.routes[i].name === config.name) {
+            found = true;
+            if (config.testScenario !== null) {
+                this.routes[i].testScenario = config.testScenario;
+            }
+            if (config.testScope) {
+                this.routes[i].testScope = config.testScope;
+            }
+            if (config.testMethod) {
+                this.routes[i].method = config.testMethod;
+            }
+            route = this.routes[i];
+            break;
+        }
+    }
+
+    res.status(found ? 200 : 404).json({
+        message: found ? 'Mock route updated.' : 'Mock route name not found.',
+        route: found ? route : null
+    });
+};
+
+Mock.prototype._routeResponse = function(route, req) {
+    let response = null;
+    const guid = route.name + route.testScope + route.testScenario;
 
     switch (route.testScope) {
-
-        //Simulates a successful response (200) - 10.2.1 200 OK
         case 'success':
-            var store = _getStore(guid);
-            if (store === null || typeof store === 'undefined') {
-                var jsonTemplate = null;
-                var dummyOptions = {};
+            let storedData = this.store.get(guid);
+            if (storedData === null || typeof storedData === 'undefined') {
+                let jsonTemplate = null;
+                const dummyOptions = {};
 
                 if (typeof route.jsonTemplate === 'object') {
-
-                    /*
-                     handle case where testScenario is not defined,
-                     default to first testScenario
-                     */
                     if (!route.testScenario) {
                         route.testScenario = 0;
                     }
 
-                    /*
-                     route.testScenario - can be type function, string, or int
-                     */
-
-                    // is the testScenario a function
+                    // testScenario can be a function
                     if (typeof route.testScenario === 'function') {
                         route.testScenario = route.testScenario(req);
                     }
 
-                    // is the testScenario a string?
+                    // testScenario is a string (named scenario)
                     if (typeof route.testScenario === 'string') {
-                        var templates = route.jsonTemplate;
-                        for (var template in templates) {
-                            if (templates[template].hasOwnProperty(route.testScenario)) {
-                                jsonTemplate = templates[template][route.testScenario](req);
+                        const templates = route.jsonTemplate;
+                        for (let template of templates) {
+                            if (template.hasOwnProperty(route.testScenario)) {
+                                jsonTemplate = template[route.testScenario](req);
                                 break;
                             }
                         }
                     }
 
-                    // is the testScenario an int?
-                    if (!isNaN(route.testScenario))
-                    {
-                        var scenario = parseInt(route.testScenario);
+                    // testScenario is an index
+                    if (!isNaN(route.testScenario)) {
+                        const scenario = parseInt(route.testScenario);
                         if (route.jsonTemplate.length > scenario) {
-                            jsonTemplate = route.jsonTemplate[scenario]();
+                            const templateItem = route.jsonTemplate[scenario];
+                            if (typeof templateItem === 'function') {
+                                jsonTemplate = templateItem(req);
+                            } else {
+                                jsonTemplate = templateItem;
+                            }
                         }
                     }
-
                 }
 
                 if (typeof route.jsonTemplate === 'string') {
                     jsonTemplate = route.jsonTemplate;
+                }
+
+                if (typeof route.jsonTemplate === 'function') {
+                    jsonTemplate = route.jsonTemplate(req);
                 }
 
                 dummyOptions.data = route.data || {};
@@ -225,123 +346,100 @@ function _routeResponse (route, req) {
                     dummyOptions.helpers = route.helpers;
                 }
 
-                //todo: use validator to enhance template validation
-                var result = dummyJson.parse(jsonTemplate, dummyOptions);
+                let result;
+                try {
+                    result = dummyJson.parse(jsonTemplate, dummyOptions);
+                } catch (err) {
+                    console.error('Error parsing template:', err);
+                    result = jsonTemplate;
+                }
 
                 response = {
                     status: 200,
-                    body: _setStore(guid, result)
+                    body: this.store.set(guid, result)
                 };
             } else {
                 response = {
                     status: 200,
-                    body: store
+                    body: storedData
                 };
             }
-
             break;
 
-
-        //Simulates a bad response (404) - 10.4.5 404 Not Found
         case 'notFound':
             response = {
                 status: 404,
-                body: route.errorBody ? route.errorBody : '10.4.5 404 Not Found'
+                body: route.errorBody || { error: 'Not Found' }
             };
             break;
 
-        //Simulates a bad response (408) - 10.4.9 408 Request Timeout
         case 'timeout':
             response = {
                 status: 408,
-                body: route.errorBody ? route.errorBody : '10.4.9 408 Request Timeout'
+                body: route.errorBody || { error: 'Request Timeout' }
             };
             break;
 
-        //Simulates a bad response (401) - 10.4.2 401 Unauthorized
         case 'unauthorized':
             response = {
                 status: 401,
-                body: route.errorBody ? route.errorBody : '10.4.2 401 Unauthorized'
+                body: route.errorBody || { error: 'Unauthorized' }
             };
             break;
 
-        //Simulates a bad response (403) - 10.4.4 403 Forbidden
         case 'forbidden':
             response = {
                 status: 403,
-                body: route.errorBody ? route.errorBody : '10.4.4 403 Forbidden'
+                body: route.errorBody || { error: 'Forbidden' }
             };
             break;
-            
-        //Simulates a bad response (409) - 10.4.10 409 Bad Request
+
         case 'conflict':
             response = {
                 status: 409,
-                body: route.errorBody ? route.errorBody : '10.4.10 409 Conflict'
+                body: route.errorBody || { error: 'Conflict' }
             };
             break;
 
-        //Simulates a bad response (400) - 10.4.1 400 Bad Request
         case 'badRequest':
             response = {
                 status: 400,
-                body: route.errorBody ? route.errorBody : '10.4.1 400 Bad Request'
+                body: route.errorBody || { error: 'Bad Request' }
             };
             break;
 
-        //Simulates a bad response (500) - 10.5.1 500 Internal Server Error
         case 'error':
             response = {
                 status: 500,
-                body: route.errorBody ? route.errorBody : '10.5.1 500 Internal Server Error'
+                body: route.errorBody || { error: 'Internal Server Error' }
             };
             break;
 
-        //Simulates a successful response(204) - 10.2.5 204 No Content
         case 'noContent':
             response = {
                 status: 204,
-                body: route.errorBody ? route.errorBody : '10.2.5 204 No Content'
+                body: ''
             };
             break;
 
-        //Defaults to a successful response (200) - 10.2.1 200 OK
+        case 'created':
+            response = {
+                status: 201,
+                body: route.errorBody || { message: 'Created' }
+            };
+            break;
+
         default:
             response = {
                 status: 200,
-                body: route.errorBody ? route.errorBody : '10.2.1 200 OK'
+                body: route.errorBody || { message: 'OK' }
             };
             break;
     }
 
-
     return response;
-}
+};
 
-function _getStore (key) {
-    return store.get(key);
-}
-
-function _setStore (key, value) {
-    store.set(key, value);
-    return value;
-}
-
-//todo: replace with validator
-function _tryParseJSON (jsonString){
-    try {
-        var o = JSON.parse(jsonString);
-
-        // Handle non-exception-throwing cases:
-        // Neither JSON.parse(false) or JSON.parse(1234) throw errors, hence the type-checking,
-        // but... JSON.parse(null) returns 'null', and typeof null === "object",
-        // so we must check for that, too.
-        if (o && typeof o === "object" && o !== null) {
-            return o;
-        }
-    }
-    catch (e) { }
-
-    return false;
-}
+module.exports = function(config) {
+    return new Mock(config);
+};

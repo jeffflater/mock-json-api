@@ -1,256 +1,287 @@
-### Travis CI - Status
-[![Build Status](https://travis-ci.org/jeffflater/mock-json-api.svg)](https://travis-ci.org/jeffflater/mock-json-api)
+# mock-json-api
 
-mock-json-api
-============
+A Node.js module for creating mock REST APIs with scenario support, perfect for frontend development and E2E testing.
 
-NPM - Mock JSON API
+## Features
 
-A node module for generating dummy data quickly and mocking an API to deliver that data as json objects defined by the developer
+- **Zero app code changes** - Just point your API URL to the mock server
+- **Real HTTP server** - True REST behavior, not browser interception
+- **Scenario switching** - Easily switch between test scenarios via query params or API
+- **State persistence** - Optional JSON file storage simulating a database
+- **State reset** - Reset all state between test runs via `POST /_reset`
+- **CORS enabled** - Works out of the box with frontend dev servers
+- **Body parsing** - JSON and URL-encoded body parsing included
+- **Route parameters** - Express-style route params (e.g., `/api/users/:id`)
+- **Dummy data generation** - Uses [dummy-json](https://github.com/webroo/dummy-json) for realistic test data
 
-Dependencies:
-- dummy-json
-- json-store
-- validator
-- express
+## Installation
 
-Properties
-- **jsonStore**: This is the local file location for the actual data that gets generated.  The data will be stored in this json file and served up on request by node.  This allows us to serve up well-known data vs. generating it everytime, thus simulating a database (of sorts).
-- **mockRoutes**: An array of routes to mock
-    - **name**: The unique identifier of the service method to be mocked
-    - **mockRoute**: The URL of the route to mock - a regex
-    - **testScope**: The behavior of the route response; success, fail, or error
-    - **errorBody**: The text that will be displayed in the response of any error thrown
-    - **method**: POST, DELETE, GET, PUT, etc
-    - **testScenario**: Determines which JSON template to return in the array when testScope is "success" by either defining the index of the array or the name of the template
-    - **latency**: in milliseconds.  Will delay the response by set number of miliseconds.  Can be a single number like 3000, a string like '3000' or a range of numbers as a string like '2000-7000'.  If a range, it will randomly select a number in that range on each request.
-    - **jsonTemplate**: The actual object to be returned from the mock route.  This will also tell node how to construct the dummy data the first time the route is requested.  It's simply an array of strings, functions or objects that return string representations of JSON objects laced with dummy JSON notation.
-	- **data**: Your own data to be used with dummy-json.
-	- **helpers**: Custom helpers to be used with dummy-json. Refer to the [dummy-json documention](https://github.com/webroo/dummy-json) for more information.
+```bash
+npm install mock-json-api
+```
 
-On The Fly Modification
-- If you need to change scenario, scope or latency on the fly, just GET the route you want to modify and add the property you want to modify to the querystring with a new value.
-- Currently you can modify testScenario(?scenario=), testScope(?scope=), and latency(?latency=) values.
-- For example: ```http://myserver.com/api/route?scenario=foo``` will change the scenario of the /api/route route to foo from whatever is set in the mock object.
+## Quick Start
 
 ```javascript
-var express = require('express');
-var mock = require('mock-json-api');
+const mock = require('mock-json-api');
 
-server = express();
-
-var mockapi = mock({
-    jsonStore: __dirname + '/data.json',
+const mockApi = mock({
+    jsonStore: './data.json', // Optional: persist data to file
     mockRoutes: [
         {
-		name: 'myFirstRoute',
-		mockRoute: '/api/foo',
-		testScope: 'success',
-		testScenario: 1, //array index OR namedScenario
-		latency: 300,
-		method: 'POST',
-		jsonTemplate: [
-			function(){ //Scenario 0
-				var myMockObject = {
-					prop1: 'abc',
-					prop2: 123
-				}
-				return JSON.stringify(myMockObject);
-			},
-			function() { return //Scenario 1
-				'{'+
-					'"people": ['+
-					'{{#repeat 2}} {'+
-						'"id": {{index}},'+
-						'"firstName": "{{firstName}}",'+
-						'"lastName": "{{lastName}}",'+
-						'"email": "{{email}}",'+
-						'"work": "{{company}}",'+
-						'"age": {{int 20 50}},'+
-						'"optedin": {{boolean}}'+
-					'} {{/repeat}}],'+
-					'"images": ['+
-						'{{#repeat 3 6}}'+
-							'"img{{index}}.png"'+
-						'{{/repeat}} ],'+
-					'"revision": {{uniqueIndex}},'+
-					'"tolerance": {{int '0' '2'}},'+
-				'}';
-			},
-			function() { return //Scenario 2
-				'{'+
-					'"people": ['+
-						'{{#repeat 300}} {'+
-							'"id": {{index}},'+
-							'"firstName": "{{firstName}}",'+
-							'"lastName": "{{lastName}}",'+
-							'"email": "{{email}}",'+
-							'"work": "{{company}}",'+
-							'"age": {{int 18 35}},'+
-							'"optedin": {{boolean}}'+
-						'} {{/repeat}}],'+
-					'"images": ['+
-						'{{#repeat 6 9}}'+
-							'"img{{index}}.png"'+
-						'{{/repeat}} ],'+
-					'"revision": {{uniqueIndex}},'+
-					'"tolerance": {{int '0' '2'}},'+
-				'}';
-            		};]
+            name: 'getUsers',
+            mockRoute: '/api/users',
+            method: 'GET',
+            testScope: 'success',
+            jsonTemplate: '{ "users": [{{#repeat 5}}{ "id": {{@index}}, "name": "{{firstName}}" }{{/repeat}}] }'
         },
         {
-          'namedScenario': function() { return //Scenario 3
-    				'{'+
-    					'"people": ['+
-    						'{{#repeat 300}} {'+
-    							'"id": {{index}},'+
-    							'"firstName": "{{firstName}}",'+
-    							'"lastName": "{{lastName}}",'+
-    							'"email": "{{email}}",'+
-    							'"work": "{{company}}",'+
-    							'"age": {{int 18 35}},'+
-    							'"optedin": {{boolean}}'+
-    						'} {{/repeat}}],'+
-    					'"images": ['+
-    						'{{#repeat 6 9}}'+
-    							'"img{{index}}.png"'+
-    						'{{/repeat}} ],'+
-    					'"revision": {{uniqueIndex}},'+
-    					'"tolerance": {{int '0' '2'}},'+
-    				'}';
-                		};]
-            }
+            name: 'getUser',
+            mockRoute: '/api/users/:id',  // Route parameters supported!
+            method: 'GET',
+            testScope: 'success',
+            jsonTemplate: (req) => JSON.stringify({ id: req.params.id, name: 'John' })
         },
         {
-		name: 'anotherRoute',
-		mockRoute: '/api/bar',
-		testScope: 'fail',
-		jsonTemplate: [ function() { return
-			'{' +
-				'"name": "{{firstName}}",'+
-				'"age": {{int 18 65}}'+
-			'}';
-		};]
-        },
-        {
-		name: 'routeUsingCustomDataAndRegexRoute',
-		mockRoute: '\/api\/.*\/customData',
-		testScope: 'success',
-		latency: '300-7000',
-		data: {
-			drawers: [
-				{name: 'Drawer 1', id: '1'},
-				{name: 'Drawer 2', id: '2'},
-				{name: 'Drawer 3', id: '3'},
-				{name: 'Drawer 4', id: '4'}],
-			attributes: [{
-					PropertyType: 0,
-					DisplayName: 'Bool',
-					Id: 'ir:attrdef_1'
-				},
-				{
-					PropertyType: 3,
-					DisplayName: 'Date',
-					Id: 'ir:attrdef_2'
-				},
-				{
-					PropertyType: 6,
-					DisplayName: 'String',
-					Id: 'ir:attrdef_3'
-				},
-				{
-					PropertyType: 6,
-					DisplayName: 'String with choices',
-					Id: 'ir:attrdef_4',
-					Choices: [{
-							DisplayName: 'Choice 1',
-							Value: 'Choice 1'
-						},
-						{
-							DisplayName: 'Choice 2',
-							Value: 'Choice 2'
-						}
-					]
-				},
-				{
-					PropertyType: 4,
-					DisplayName: 'Attr Float no min max',
-					Id: 'ir:attrdef_8',
-					MaximumValue: 2147483647,
-					MinimumValue: -2147483648
-				},
-				{
-					PropertyType: 1,
-					DisplayName: 'Attr User',
-					Id: 'ir:attrdef_11',
-					Choices: [{
-							DisplayName: 'Corey',
-							Value: 'Corey'
-						},
-						{
-							DisplayName: 'Scott',
-							Value: 'Scott'
-						},
-						{
-							DisplayName: 'Derek',
-							Value: 'Derek'
-						}]
-				}]
-		},
-		jsonTemplate: [ function() { return
-			'{' +
-				'"drawers":[' +
-				'       {{#repeat drawers}}' +
-				'       {' +
-				'       "fileTypes":' +
-				'           [' +
-				'               {{#repeat 1 5}}' +
-				'               {{int 5}}' +
-				'               {{/repeat}}' +
-				'           ],' +
-				'       "id":"{{this.id}}",' +
-				'       "name":"{{this.name}}"' +
-				'       }{{/repeat}}' +
-				'   ],' +
-				'"fileTypes":[' +
-				'   {{#repeat 5 8}}' +
-				'   	{' +
-				'       "attributes":[' +
-				'           {{#repeat attributes}}' +
-				'           {' +
-				'           {{#if this.Choices}}'+
-				'           "Choices": [' +
-				'           {{#repeat this.Choices}}' +
-				'           {"DisplayName": "{{this.DisplayName}}", "Value": "{{this.Value}}"}' +
-				'           {{/repeat}}' +
-				'           ],' +
-				'           {{else}}' +
-				'           "Choices": [],' +
-				'           {{/if}}' +
-				'           {{#if this.MinimumValue}}' +
-				'           "MinimumValue":"{{this.MinimumValue}}",' +
-				'           {{/if}}' +
-				'           {{#if this.MaximumValue}}' +
-				'           "MaximumValue":"{{this.MaximumValue}}",' +
-				'           {{/if}}' +
-				'           "Id":"{{this.Id}}",' +
-				'           "DisplayName":"{{this.DisplayName}}",' +
-				'           "PropertyType":{{this.PropertyType}}' +
-				'           }' +
-				'           {{/repeat}}' +
-				'       ],' +
-				'       "id": "{{uniqueIndex}}",' +
-				'       "name": "{{company}}",' +       
-				'   	}' +
-				'	 {{/repeat}}' +
-				']' +
-        		'}';
-		};
-     	     ]
+            name: 'createUser',
+            mockRoute: '/api/users',
+            method: 'POST',
+            testScope: 'success',
+            jsonTemplate: (req) => JSON.stringify({ id: 1, name: req.body.name })
         }
     ]
 });
 
-server.use(mockapi.registerRoutes);
-server.listen(3001);
+const app = mockApi.createServer();
+app.listen(3001, () => console.log('Mock API running on port 3001'));
 ```
+
+## Configuration
+
+### Top-level options
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `mockRoutes` | Array | Yes | Array of route configurations |
+| `jsonStore` | String | No | File path for data persistence |
+| `cors` | Boolean/Object | No | CORS settings (default: enabled) |
+
+### Route options
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `name` | String | Unique identifier for the route |
+| `mockRoute` | String | URL pattern (supports Express params like `:id` or regex) |
+| `method` | String | HTTP method: GET, POST, PUT, DELETE, PATCH |
+| `testScope` | String | Response behavior (see Test Scopes below) |
+| `testScenario` | Number/String/Function | Which scenario template to use |
+| `jsonTemplate` | String/Function/Array | Response template(s) |
+| `latency` | Number/String | Response delay in ms (e.g., `300` or `"200-500"`) |
+| `errorBody` | Any | Custom error response body |
+| `data` | Object | Custom data for dummy-json templates |
+| `helpers` | Object | Custom dummy-json helper functions |
+
+### Test Scopes
+
+| Scope | Status Code | Description |
+|-------|-------------|-------------|
+| `success` | 200 | Successful response with template data |
+| `created` | 201 | Resource created |
+| `noContent` | 204 | Success with no body |
+| `badRequest` | 400 | Bad request error |
+| `unauthorized` | 401 | Authentication required |
+| `forbidden` | 403 | Access denied |
+| `notFound` | 404 | Resource not found |
+| `timeout` | 408 | Request timeout |
+| `conflict` | 409 | Conflict error |
+| `error` | 500 | Internal server error |
+
+## API Endpoints
+
+### Reset State
+
+Reset all data and route configurations to initial state:
+
+```
+POST /_reset
+```
+
+Response:
+```json
+{ "success": true, "message": "Mock server state reset" }
+```
+
+### Set Route Scenario
+
+Change a route's scenario programmatically:
+
+```
+POST /_scenario
+Content-Type: application/json
+
+{ "name": "getUsers", "scenario": 1, "scope": "success" }
+```
+
+## Scenarios
+
+Define multiple response scenarios for a route:
+
+```javascript
+{
+    name: 'getUsers',
+    mockRoute: '/api/users',
+    method: 'GET',
+    testScope: 'success',
+    testScenario: 0,  // Default scenario
+    jsonTemplate: [
+        // Scenario 0: Few users
+        () => '{ "users": [{{#repeat 2}}{ "name": "{{firstName}}" }{{/repeat}}] }',
+        // Scenario 1: Many users
+        () => '{ "users": [{{#repeat 100}}{ "name": "{{firstName}}" }{{/repeat}}] }',
+        // Named scenario
+        { 'empty': () => '{ "users": [] }' }
+    ]
+}
+```
+
+### Switching scenarios
+
+**Via query parameter:**
+```
+GET /api/users?scenario=1
+GET /api/users?scenario=empty
+```
+
+**Via API:**
+```
+POST /_scenario
+{ "name": "getUsers", "scenario": "empty" }
+```
+
+## Route Parameters
+
+Use Express-style route parameters:
+
+```javascript
+{
+    name: 'getUser',
+    mockRoute: '/api/users/:id',
+    method: 'GET',
+    testScope: 'success',
+    jsonTemplate: (req) => JSON.stringify({
+        id: req.params.id,
+        name: 'User ' + req.params.id
+    })
+}
+```
+
+Multiple parameters work too:
+
+```javascript
+{
+    name: 'getTeamPlayer',
+    mockRoute: '/api/teams/:teamId/players/:playerId',
+    method: 'GET',
+    testScope: 'success',
+    jsonTemplate: (req) => JSON.stringify({
+        teamId: req.params.teamId,
+        playerId: req.params.playerId
+    })
+}
+```
+
+## Request Body Access
+
+POST/PUT request bodies are automatically parsed:
+
+```javascript
+{
+    name: 'createUser',
+    mockRoute: '/api/users',
+    method: 'POST',
+    testScope: 'success',
+    jsonTemplate: (req) => JSON.stringify({
+        id: Date.now(),
+        name: req.body.name,
+        email: req.body.email
+    })
+}
+```
+
+## E2E Testing Example
+
+```javascript
+// In your E2E test setup
+beforeEach(async () => {
+    // Reset mock server state before each test
+    await fetch('http://localhost:3001/_reset', { method: 'POST' });
+});
+
+test('shows empty state when no users', async () => {
+    // Switch to empty scenario
+    await fetch('http://localhost:3001/_scenario', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: 'getUsers', scenario: 'empty' })
+    });
+
+    // Run your test...
+});
+
+test('handles server error gracefully', async () => {
+    // Switch to error scope
+    await fetch('http://localhost:3001/_scenario', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: 'getUsers', scope: 'error' })
+    });
+
+    // Run your test...
+});
+```
+
+## CORS Configuration
+
+CORS is enabled by default. To customize or disable:
+
+```javascript
+// Disable CORS
+const mockApi = mock({
+    cors: false,
+    mockRoutes: [...]
+});
+
+// Custom CORS options
+const mockApi = mock({
+    cors: {
+        origin: 'http://localhost:5173',
+        credentials: true
+    },
+    mockRoutes: [...]
+});
+```
+
+## Legacy Middleware Usage
+
+For backward compatibility, you can still use `registerRoutes` as middleware:
+
+```javascript
+const express = require('express');
+const mock = require('mock-json-api');
+
+const app = express();
+app.use(express.json());
+
+const mockApi = mock({
+    mockRoutes: [...]
+});
+
+app.use(mockApi.registerRoutes.bind(mockApi));
+app.listen(3001);
+```
+
+However, `createServer()` is recommended as it includes CORS and body parsing automatically.
+
+## License
+
+MIT
