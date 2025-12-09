@@ -160,7 +160,9 @@ Mock.prototype.registerRoutes = function(req, res, next) {
     let found = false;
     let matchedRoute = null;
     let extractedParams = {};
+    const urlPath = req.originalUrl.split('?')[0]; // Remove query string
 
+    // First pass: check parameterized routes (more specific)
     for (let i = 0; i < this.routes.length; i++) {
         const route = this.routes[i];
 
@@ -169,12 +171,9 @@ Mock.prototype.registerRoutes = function(req, res, next) {
         }
 
         const matchingMethod = (route.method.toLowerCase() === req.method.toLowerCase());
-
         if (!matchingMethod) continue;
 
-        // Try path-to-regexp matching first for parameterized routes
         if (route._isParamRoute && route._matcher) {
-            const urlPath = req.originalUrl.split('?')[0]; // Remove query string
             const matchResult = route._matcher(urlPath);
             if (matchResult) {
                 found = true;
@@ -183,14 +182,45 @@ Mock.prototype.registerRoutes = function(req, res, next) {
                 break;
             }
         }
-        // Fall back to regex matching
-        else if (route.mockRoute) {
-            const urlPath = req.originalUrl.toLowerCase();
-            const routePattern = route.mockRoute.toLowerCase();
-            if (urlPath.match(routePattern) !== null) {
-                found = true;
-                matchedRoute = route;
-                break;
+    }
+
+    // Second pass: check regex/exact routes
+    if (!found) {
+        for (let i = 0; i < this.routes.length; i++) {
+            const route = this.routes[i];
+
+            if (!(typeof route.method === 'string' || route.method instanceof String)) {
+                route.method = 'get';
+            }
+
+            const matchingMethod = (route.method.toLowerCase() === req.method.toLowerCase());
+            if (!matchingMethod) continue;
+
+            // Skip parameterized routes (already checked)
+            if (route._isParamRoute) continue;
+
+            if (route.mockRoute) {
+                const urlLower = urlPath.toLowerCase();
+                const routePattern = route.mockRoute.toLowerCase();
+
+                // Check if it's a regex pattern (contains regex special chars)
+                const isRegex = /[\\^$*+?.()|[\]{}]/.test(routePattern);
+
+                if (isRegex) {
+                    // Regex matching
+                    if (urlLower.match(routePattern) !== null) {
+                        found = true;
+                        matchedRoute = route;
+                        break;
+                    }
+                } else {
+                    // Exact matching for simple routes
+                    if (urlLower === routePattern) {
+                        found = true;
+                        matchedRoute = route;
+                        break;
+                    }
+                }
             }
         }
     }
