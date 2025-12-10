@@ -1,5 +1,8 @@
 # mock-json-api
 
+[![npm version](https://badge.fury.io/js/mock-json-api.svg)](https://www.npmjs.com/package/mock-json-api)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 A Node.js module for creating mock REST APIs with scenario support, perfect for frontend development and E2E testing.
 
 ## Features
@@ -11,8 +14,9 @@ A Node.js module for creating mock REST APIs with scenario support, perfect for 
 - **State reset** - Reset all state between test runs via `POST /_reset`
 - **CORS enabled** - Works out of the box with frontend dev servers
 - **Body parsing** - JSON and URL-encoded body parsing included
-- **Route parameters** - Express-style route params (e.g., `/api/users/:id`)
+- **Flexible routing** - Regex patterns or Express-style params (`:id`)
 - **Dummy data generation** - Uses [dummy-json](https://github.com/webroo/dummy-json) for realistic test data
+- **Latency simulation** - Add delays to simulate network conditions
 
 ## Installation
 
@@ -96,6 +100,62 @@ app.listen(3001, () => console.log('Mock API running on port 3001'));
 | `conflict` | 409 | Conflict error |
 | `error` | 500 | Internal server error |
 
+## Route Matching
+
+### Regex Routes (Original)
+
+The `mockRoute` property is a **regex pattern** by default:
+
+```javascript
+// Matches /api/users, /api/users/, /api/users/123, etc.
+{ mockRoute: '/api/users' }
+
+// Exact match only
+{ mockRoute: '^/api/users$' }
+
+// Match any path under /api/
+{ mockRoute: '/api/.*' }
+
+// Match users with numeric ID
+{ mockRoute: '/api/users/[0-9]+' }
+```
+
+### Parameterized Routes (New)
+
+Routes containing `:param` use Express-style matching with automatic parameter extraction:
+
+```javascript
+{
+    name: 'getUser',
+    mockRoute: '/api/users/:id',
+    method: 'GET',
+    testScope: 'success',
+    jsonTemplate: (req) => JSON.stringify({
+        id: req.params.id,
+        name: 'User ' + req.params.id
+    })
+}
+```
+
+Multiple parameters:
+
+```javascript
+{
+    name: 'getTeamPlayer',
+    mockRoute: '/api/teams/:teamId/players/:playerId',
+    method: 'GET',
+    testScope: 'success',
+    jsonTemplate: (req) => JSON.stringify({
+        teamId: req.params.teamId,
+        playerId: req.params.playerId
+    })
+}
+```
+
+**Note:** Parameterized routes are checked before regex routes, so you can have both:
+- `/api/users/:id` - matches `/api/users/123` (checked first)
+- `/api/users` - matches `/api/users` base path
+
 ## API Endpoints
 
 ### Reset State
@@ -158,38 +218,6 @@ POST /_scenario
 { "name": "getUsers", "scenario": "empty" }
 ```
 
-## Route Parameters
-
-Use Express-style route parameters:
-
-```javascript
-{
-    name: 'getUser',
-    mockRoute: '/api/users/:id',
-    method: 'GET',
-    testScope: 'success',
-    jsonTemplate: (req) => JSON.stringify({
-        id: req.params.id,
-        name: 'User ' + req.params.id
-    })
-}
-```
-
-Multiple parameters work too:
-
-```javascript
-{
-    name: 'getTeamPlayer',
-    mockRoute: '/api/teams/:teamId/players/:playerId',
-    method: 'GET',
-    testScope: 'success',
-    jsonTemplate: (req) => JSON.stringify({
-        teamId: req.params.teamId,
-        playerId: req.params.playerId
-    })
-}
-```
-
 ## Request Body Access
 
 POST/PUT request bodies are automatically parsed:
@@ -205,6 +233,92 @@ POST/PUT request bodies are automatically parsed:
         name: req.body.name,
         email: req.body.email
     })
+}
+```
+
+## Dummy-JSON Templates
+
+Templates use [dummy-json](https://github.com/webroo/dummy-json) syntax for generating realistic test data:
+
+```javascript
+jsonTemplate: `{
+    "users": [
+        {{#repeat 5}}
+        {
+            "id": {{@index}},
+            "firstName": "{{firstName}}",
+            "lastName": "{{lastName}}",
+            "email": "{{email}}",
+            "company": "{{company}}",
+            "age": {{int 18 65}},
+            "isActive": {{boolean}}
+        }
+        {{/repeat}}
+    ],
+    "total": {{int 100 500}}
+}`
+```
+
+### Available Helpers
+
+| Helper | Example | Output |
+|--------|---------|--------|
+| `{{firstName}}` | - | "John" |
+| `{{lastName}}` | - | "Smith" |
+| `{{email}}` | - | "john@example.com" |
+| `{{company}}` | - | "Acme Corp" |
+| `{{int min max}}` | `{{int 1 100}}` | 42 |
+| `{{float min max}}` | `{{float 0 1}}` | 0.73 |
+| `{{boolean}}` | - | true |
+| `{{date}}` | - | "2023-05-15" |
+| `{{time}}` | - | "14:30:00" |
+| `{{#repeat count}}` | `{{#repeat 3}}...{{/repeat}}` | Repeats content |
+
+### Custom Data
+
+Pass your own data to templates:
+
+```javascript
+{
+    name: 'getConfig',
+    mockRoute: '/api/config',
+    method: 'GET',
+    testScope: 'success',
+    data: {
+        regions: ['US', 'EU', 'APAC'],
+        features: { darkMode: true, beta: false }
+    },
+    jsonTemplate: `{
+        "regions": [{{#each regions}}"{{this}}"{{#unless @last}},{{/unless}}{{/each}}],
+        "features": {
+            "darkMode": {{features.darkMode}},
+            "beta": {{features.beta}}
+        }
+    }`
+}
+```
+
+## Latency Simulation
+
+Simulate network delays:
+
+```javascript
+{
+    name: 'slowEndpoint',
+    mockRoute: '/api/slow',
+    method: 'GET',
+    testScope: 'success',
+    latency: 2000,  // Fixed 2 second delay
+    jsonTemplate: '{ "message": "Finally!" }'
+}
+
+{
+    name: 'variableLatency',
+    mockRoute: '/api/variable',
+    method: 'GET',
+    testScope: 'success',
+    latency: '500-3000',  // Random delay between 500ms and 3s
+    jsonTemplate: '{ "message": "Done" }'
 }
 ```
 
@@ -281,6 +395,24 @@ app.listen(3001);
 ```
 
 However, `createServer()` is recommended as it includes CORS and body parsing automatically.
+
+## Upgrading to 0.3.0
+
+Version 0.3.0 introduces several improvements while maintaining backward compatibility:
+
+**New features:**
+- `createServer()` method - recommended way to start the server
+- `POST /_reset` endpoint for E2E test isolation
+- Built-in CORS support
+- Built-in body parsing
+- Express-style route parameters (`:id`)
+- `created` test scope (201 status)
+
+**Breaking changes:**
+- None - existing code continues to work
+
+**Deprecated:**
+- Using `registerRoutes` directly without body parsing middleware
 
 ## License
 
