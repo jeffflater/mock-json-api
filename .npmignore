@@ -1,5 +1,6 @@
 # Development and test files
 __tests__/
+types.test.ts
 .github/
 
 # Editor and IDE

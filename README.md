@@ -12,6 +12,7 @@ A Node.js module for creating mock REST APIs with scenario support, perfect for 
 - **Scenario switching** - Easily switch between test scenarios via query params or API
 - **Presets** - Define named configurations to switch entire experiences at once
 - **Request logging** - Debug your mock configuration with built-in logging
+- **TypeScript support** - Full type definitions included for IntelliSense and type safety
 - **State persistence** - Optional JSON file storage simulating a database
 - **State reset** - Reset all state between test runs via `POST /_reset`
 - **CORS enabled** - Works out of the box with frontend dev servers
@@ -619,6 +620,48 @@ app.listen(3001);
 
 However, `createServer()` is recommended as it includes CORS and body parsing automatically.
 
+## TypeScript Support
+
+This package includes TypeScript type definitions. You get full IntelliSense and type checking out of the box:
+
+```typescript
+import mock = require('mock-json-api');
+
+const mockApi = mock({
+    mockRoutes: [
+        {
+            name: 'getUsers',
+            mockRoute: '/api/users',
+            method: 'GET',           // Autocomplete: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH'
+            testScope: 'success',    // Autocomplete: 'success' | 'error' | 'notFound' | ...
+            jsonTemplate: '{ "users": [] }'
+        }
+    ],
+    presets: {
+        'error-mode': {
+            '*': { scope: 'error' }  // Type-checked preset config
+        }
+    }
+});
+
+const app = mockApi.createServer();
+app.listen(3001);
+```
+
+### Available Types
+
+All types are exported under the `mock` namespace:
+
+```typescript
+import mock = require('mock-json-api');
+
+// Use types for your own code
+const routes: mock.MockRoute[] = [...];
+const config: mock.MockConfig = {...};
+const preset: mock.Preset = {...};
+const logInfo: mock.LogInfo = {...};
+```
+
 ## Upgrading to 0.3.0
 
 Version 0.3.0 introduces several improvements while maintaining backward compatibility:
@@ -632,6 +675,7 @@ Version 0.3.0 introduces several improvements while maintaining backward compati
 - `created` test scope (201 status)
 - **Presets** - Define named configurations to switch entire experiences at once via `POST /_preset`
 - **Request logging** - Debug mock configuration with `logging: true`, `'verbose'`, or custom function
+- **TypeScript definitions** - Full type definitions for IntelliSense and type safety
 
 **Breaking changes:**
 - None - existing code continues to work
