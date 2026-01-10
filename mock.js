@@ -80,6 +80,7 @@ function Mock(config) {
     this.config = config;
     this.presets = config.presets || {};
     this.activePreset = null;
+    this.logging = config.logging || false;
 
     // Store original route configurations for reset
     this.originalRoutes = JSON.parse(JSON.stringify(
@@ -230,6 +231,11 @@ Mock.prototype.registerRoutes = function(req, res, next) {
     }
 
     if (!found) {
+        this._log({
+            method: req.method,
+            url: req.originalUrl,
+            notFound: true
+        });
         if (next) {
             next();
         } else {
@@ -278,6 +284,17 @@ Mock.prototype.registerRoutes = function(req, res, next) {
     }
 
     const response = this._routeResponse(route, req);
+
+    // Log the request
+    this._log({
+        method: req.method,
+        url: req.originalUrl,
+        routeName: route.name,
+        scope: route.testScope,
+        scenario: route.testScenario,
+        latency: latency,
+        status: response.status
+    });
 
     setTimeout(() => {
         res.set('Content-Type', 'application/json');
@@ -419,6 +436,44 @@ Mock.prototype._matchRoutesByPattern = function(pattern) {
     // Exact match
     const route = this.routes.find(r => r.name === pattern);
     return route ? [route] : [];
+};
+
+/**
+ * Log request information
+ * @param {object} info - Log information object
+ */
+Mock.prototype._log = function(info) {
+    if (!this.logging) return;
+
+    // Custom logging function
+    if (typeof this.logging === 'function') {
+        this.logging(info);
+        return;
+    }
+
+    const timestamp = new Date().toISOString();
+    const prefix = '[mock-json-api]';
+
+    if (info.notFound) {
+        console.log(`${prefix} ${info.method} ${info.url} -> NOT FOUND (no matching route)`);
+        return;
+    }
+
+    if (this.logging === 'verbose') {
+        console.log(`${prefix} ${info.method} ${info.url}`);
+        console.log(`  Route: ${info.routeName}`);
+        console.log(`  Scope: ${info.scope}`);
+        console.log(`  Scenario: ${info.scenario}`);
+        if (info.latency > 0) {
+            console.log(`  Latency: ${info.latency}ms`);
+        }
+        console.log(`  Response: ${info.status}`);
+    } else {
+        // Basic logging
+        const scenarioStr = info.scenario !== undefined ? `, scenario: ${info.scenario}` : '';
+        const latencyStr = info.latency > 0 ? ` [${info.latency}ms]` : '';
+        console.log(`${prefix} ${info.method} ${info.url} -> ${info.routeName} (${info.scope}${scenarioStr}) ${info.status}${latencyStr}`);
+    }
 };
 
 Mock.prototype._routeResponse = function(route, req) {
