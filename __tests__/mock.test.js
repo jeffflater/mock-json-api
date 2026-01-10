@@ -717,4 +717,156 @@ describe('mock-json-api', () => {
             });
         });
     });
+
+    describe('Logging', () => {
+        let consoleSpy;
+
+        beforeEach(() => {
+            consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+        });
+
+        afterEach(() => {
+            consoleSpy.mockRestore();
+        });
+
+        describe('Basic logging (logging: true)', () => {
+            beforeEach(() => {
+                mockApi = mock({
+                    logging: true,
+                    mockRoutes: [{
+                        name: 'getUsers',
+                        mockRoute: '/api/users',
+                        method: 'GET',
+                        testScope: 'success',
+                        testScenario: 0,
+                        jsonTemplate: '{ "users": [] }'
+                    }]
+                });
+                app = mockApi.createServer();
+            });
+
+            it('should log successful requests', async () => {
+                await request(app).get('/api/users');
+                expect(consoleSpy).toHaveBeenCalled();
+                const logCall = consoleSpy.mock.calls[0][0];
+                expect(logCall).toContain('[mock-json-api]');
+                expect(logCall).toContain('GET');
+                expect(logCall).toContain('/api/users');
+                expect(logCall).toContain('getUsers');
+                expect(logCall).toContain('success');
+                expect(logCall).toContain('200');
+            });
+
+            it('should log not found requests', async () => {
+                await request(app).get('/api/unknown');
+                expect(consoleSpy).toHaveBeenCalled();
+                const logCall = consoleSpy.mock.calls[0][0];
+                expect(logCall).toContain('NOT FOUND');
+            });
+        });
+
+        describe('Verbose logging (logging: "verbose")', () => {
+            beforeEach(() => {
+                mockApi = mock({
+                    logging: 'verbose',
+                    mockRoutes: [{
+                        name: 'getUsers',
+                        mockRoute: '/api/users',
+                        method: 'GET',
+                        testScope: 'success',
+                        testScenario: 'default',
+                        latency: 50,
+                        jsonTemplate: '{ "users": [] }'
+                    }]
+                });
+                app = mockApi.createServer();
+            });
+
+            it('should log detailed request information', async () => {
+                await request(app).get('/api/users');
+                // Verbose mode logs multiple lines: request line + route + scope + scenario + latency + response
+                expect(consoleSpy.mock.calls.length).toBeGreaterThanOrEqual(5);
+                const calls = consoleSpy.mock.calls.map(c => c[0]);
+                expect(calls.some(c => c.includes('Route: getUsers'))).toBe(true);
+                expect(calls.some(c => c.includes('Scope: success'))).toBe(true);
+                expect(calls.some(c => c.includes('Scenario: default'))).toBe(true);
+                expect(calls.some(c => c.includes('Latency:'))).toBe(true);
+                expect(calls.some(c => c.includes('Response: 200'))).toBe(true);
+            });
+        });
+
+        describe('Custom logging function', () => {
+            it('should call custom logging function with info object', async () => {
+                const customLogger = jest.fn();
+                mockApi = mock({
+                    logging: customLogger,
+                    mockRoutes: [{
+                        name: 'getUsers',
+                        mockRoute: '/api/users',
+                        method: 'GET',
+                        testScope: 'success',
+                        jsonTemplate: '{ "users": [] }'
+                    }]
+                });
+                app = mockApi.createServer();
+
+                await request(app).get('/api/users');
+
+                expect(customLogger).toHaveBeenCalledWith(
+                    expect.objectContaining({
+                        method: 'GET',
+                        url: '/api/users',
+                        routeName: 'getUsers',
+                        scope: 'success',
+                        status: 200
+                    })
+                );
+            });
+
+            it('should pass notFound flag for unmatched routes', async () => {
+                const customLogger = jest.fn();
+                mockApi = mock({
+                    logging: customLogger,
+                    mockRoutes: [{
+                        name: 'getUsers',
+                        mockRoute: '/api/users',
+                        method: 'GET',
+                        testScope: 'success',
+                        jsonTemplate: '{ "users": [] }'
+                    }]
+                });
+                app = mockApi.createServer();
+
+                await request(app).get('/api/unknown');
+
+                expect(customLogger).toHaveBeenCalledWith(
+                    expect.objectContaining({
+                        method: 'GET',
+                        url: '/api/unknown',
+                        notFound: true
+                    })
+                );
+            });
+        });
+
+        describe('Logging disabled (default)', () => {
+            beforeEach(() => {
+                mockApi = mock({
+                    mockRoutes: [{
+                        name: 'getUsers',
+                        mockRoute: '/api/users',
+                        method: 'GET',
+                        testScope: 'success',
+                        jsonTemplate: '{ "users": [] }'
+                    }]
+                });
+                app = mockApi.createServer();
+            });
+
+            it('should not log when logging is disabled', async () => {
+                await request(app).get('/api/users');
+                expect(consoleSpy).not.toHaveBeenCalled();
+            });
+        });
+    });
 });

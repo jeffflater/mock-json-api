@@ -11,6 +11,7 @@ A Node.js module for creating mock REST APIs with scenario support, perfect for 
 - **Real HTTP server** - True REST behavior, not browser interception
 - **Scenario switching** - Easily switch between test scenarios via query params or API
 - **Presets** - Define named configurations to switch entire experiences at once
+- **Request logging** - Debug your mock configuration with built-in logging
 - **State persistence** - Optional JSON file storage simulating a database
 - **State reset** - Reset all state between test runs via `POST /_reset`
 - **CORS enabled** - Works out of the box with frontend dev servers
@@ -71,6 +72,7 @@ app.listen(3001, () => console.log('Mock API running on port 3001'));
 | `jsonStore` | String | No | File path for data persistence |
 | `cors` | Boolean/Object | No | CORS settings (default: enabled) |
 | `presets` | Object | No | Named preset configurations (see Presets) |
+| `logging` | Boolean/String/Function | No | Request logging (see Logging) |
 
 ### Route options
 
@@ -433,6 +435,78 @@ Simulate network delays:
 }
 ```
 
+## Logging
+
+Enable request logging to see what routes are being hit and how they're being resolved. This is helpful for debugging mock configurations.
+
+### Basic Logging
+
+```javascript
+const mockApi = mock({
+    logging: true,
+    mockRoutes: [...]
+});
+```
+
+Output:
+```
+[mock-json-api] GET /api/users -> getUsers (success, scenario: 0) 200
+[mock-json-api] POST /api/users -> createUser (created) 201
+[mock-json-api] GET /api/unknown -> NOT FOUND (no matching route)
+```
+
+### Verbose Logging
+
+```javascript
+const mockApi = mock({
+    logging: 'verbose',
+    mockRoutes: [...]
+});
+```
+
+Output:
+```
+[mock-json-api] GET /api/users
+  Route: getUsers
+  Scope: success
+  Scenario: 0
+  Latency: 150ms
+  Response: 200
+```
+
+### Custom Logging Function
+
+Pass a function to handle logs yourself:
+
+```javascript
+const mockApi = mock({
+    logging: (info) => {
+        // info contains: method, url, routeName, scope, scenario, latency, status, notFound
+        if (info.notFound) {
+            console.warn(`Missing route: ${info.method} ${info.url}`);
+        } else {
+            myLogger.info(`${info.method} ${info.url} -> ${info.status}`);
+        }
+    },
+    mockRoutes: [...]
+});
+```
+
+### Log Info Object
+
+When using a custom logging function, the `info` object contains:
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `method` | String | HTTP method (GET, POST, etc.) |
+| `url` | String | Request URL |
+| `routeName` | String | Matched route name (if found) |
+| `scope` | String | Test scope used |
+| `scenario` | Number/String | Scenario used |
+| `latency` | Number | Applied latency in ms |
+| `status` | Number | HTTP status code |
+| `notFound` | Boolean | True if no route matched |
+
 ## E2E Testing Example
 
 ```javascript
@@ -557,6 +631,7 @@ Version 0.3.0 introduces several improvements while maintaining backward compati
 - Express-style route parameters (`:id`)
 - `created` test scope (201 status)
 - **Presets** - Define named configurations to switch entire experiences at once via `POST /_preset`
+- **Request logging** - Debug mock configuration with `logging: true`, `'verbose'`, or custom function
 
 **Breaking changes:**
 - None - existing code continues to work
