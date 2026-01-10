@@ -78,13 +78,16 @@ function Mock(config) {
     this.store = new DataStore(config.jsonStore);
     this.routes = config.mockRoutes;
     this.config = config;
+    this.presets = config.presets || {};
+    this.activePreset = null;
 
     // Store original route configurations for reset
     this.originalRoutes = JSON.parse(JSON.stringify(
         config.mockRoutes.map(r => ({
             name: r.name,
             testScope: r.testScope,
-            testScenario: r.testScenario
+            testScenario: r.testScenario,
+            latency: r.latency
         }))
     ));
 
@@ -131,6 +134,15 @@ Mock.prototype.createServer = function() {
         this.setRouteScenario(req, res);
     });
 
+    // Preset endpoints
+    app.get('/_preset', (req, res) => {
+        this.getPresets(req, res);
+    });
+
+    app.post('/_preset', (req, res) => {
+        this.setPreset(req, res);
+    });
+
     // Register mock routes
     app.use((req, res, next) => {
         this.registerRoutes(req, res, next);
@@ -146,12 +158,16 @@ Mock.prototype.reset = function() {
     // Clear the data store
     this.store.clear();
 
+    // Clear active preset
+    this.activePreset = null;
+
     // Reset all routes to original configuration
     this.originalRoutes.forEach(original => {
         const route = this.routes.find(r => r.name === original.name);
         if (route) {
             route.testScope = original.testScope;
             route.testScenario = original.testScenario;
+            route.latency = original.latency;
         }
     });
 };
@@ -301,6 +317,108 @@ Mock.prototype.setRouteScenario = function(req, res) {
         message: found ? 'Mock route updated.' : 'Mock route name not found.',
         route: found ? route : null
     });
+};
+
+/**
+ * Get available presets and active preset
+ */
+Mock.prototype.getPresets = function(req, res) {
+    res.json({
+        active: this.activePreset,
+        available: Object.keys(this.presets)
+    });
+};
+
+/**
+ * Activate a preset
+ */
+Mock.prototype.setPreset = function(req, res) {
+    const presetName = req.body.name;
+
+    // Reset to default if null, undefined, or "default"
+    if (presetName === null || presetName === undefined || presetName === 'default') {
+        this.reset();
+        this.activePreset = null;
+        return res.json({
+            success: true,
+            preset: 'default',
+            message: 'Reset to default configuration',
+            routesUpdated: this.routes.length
+        });
+    }
+
+    // Check if preset exists
+    if (!this.presets.hasOwnProperty(presetName)) {
+        return res.status(404).json({
+            success: false,
+            message: `Preset '${presetName}' not found`,
+            available: Object.keys(this.presets)
+        });
+    }
+
+    const preset = this.presets[presetName];
+    let routesUpdated = 0;
+
+    // First, reset all routes to original configuration
+    this.originalRoutes.forEach(original => {
+        const route = this.routes.find(r => r.name === original.name);
+        if (route) {
+            route.testScope = original.testScope;
+            route.testScenario = original.testScenario;
+            route.latency = original.latency;
+        }
+    });
+
+    // Clear the data store to regenerate responses
+    this.store.clear();
+
+    // Apply preset configurations
+    for (const [pattern, config] of Object.entries(preset)) {
+        const matchingRoutes = this._matchRoutesByPattern(pattern);
+
+        for (const route of matchingRoutes) {
+            if (config.scenario !== undefined) {
+                route.testScenario = config.scenario;
+            }
+            if (config.scope !== undefined) {
+                route.testScope = config.scope;
+            }
+            if (config.latency !== undefined) {
+                route.latency = config.latency;
+            }
+            routesUpdated++;
+        }
+    }
+
+    this.activePreset = presetName;
+
+    res.json({
+        success: true,
+        preset: presetName,
+        message: `Preset '${presetName}' activated`,
+        routesUpdated: routesUpdated
+    });
+};
+
+/**
+ * Match routes by pattern (supports wildcards)
+ * @param {string} pattern - Route name pattern ('*' for all, 'users*' for prefix match)
+ * @returns {Array} - Matching routes
+ */
+Mock.prototype._matchRoutesByPattern = function(pattern) {
+    if (pattern === '*') {
+        return this.routes;
+    }
+
+    // Check for wildcard prefix match (e.g., 'users*')
+    if (pattern.endsWith('*')) {
+        const prefix = pattern.slice(0, -1);
+        return this.routes.filter(route => route.name && route.name.startsWith(prefix));
+    }
+
+    // Exact match
+    const route = this.routes.find(r => r.name === pattern);
+    return route ? [route] : [];
 };
 
 Mock.prototype._routeResponse = function(route, req) {

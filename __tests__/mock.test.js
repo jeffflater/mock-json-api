@@ -457,4 +457,264 @@ describe('mock-json-api', () => {
             expect(JSON.parse(res.text).method).toBe('PATCH');
         });
     });
+
+    describe('Presets', () => {
+        beforeEach(() => {
+            mockApi = mock({
+                mockRoutes: [
+                    {
+                        name: 'getUsers',
+                        mockRoute: '/api/users',
+                        method: 'GET',
+                        testScope: 'success',
+                        testScenario: 0,
+                        jsonTemplate: [
+                            () => '{ "users": [{"name": "John"}] }',
+                            () => '{ "users": [] }',
+                            { 'many': () => '{ "users": [{"name": "John"}, {"name": "Jane"}, {"name": "Bob"}] }' }
+                        ]
+                    },
+                    {
+                        name: 'getUser',
+                        mockRoute: '/api/users/:id',
+                        method: 'GET',
+                        testScope: 'success',
+                        testScenario: 0,
+                        jsonTemplate: '{ "user": { "id": 1, "name": "John" } }'
+                    },
+                    {
+                        name: 'createUser',
+                        mockRoute: '/api/users',
+                        method: 'POST',
+                        testScope: 'created',
+                        jsonTemplate: '{ "created": true }'
+                    },
+                    {
+                        name: 'getOrders',
+                        mockRoute: '/api/orders',
+                        method: 'GET',
+                        testScope: 'success',
+                        jsonTemplate: '{ "orders": [] }'
+                    }
+                ],
+                presets: {
+                    'happy-path': {
+                        'getUsers': { scenario: 'many', scope: 'success' },
+                        'getUser': { scope: 'success' },
+                        'createUser': { scope: 'created' }
+                    },
+                    'new-user': {
+                        'getUsers': { scenario: 1 },
+                        'getUser': { scope: 'notFound' }
+                    },
+                    'error-mode': {
+                        'getUsers': { scope: 'error' },
+                        'createUser': { scope: 'badRequest' }
+                    },
+                    'slow-network': {
+                        '*': { latency: 100 }
+                    },
+                    'user-errors': {
+                        'getUser*': { scope: 'error' }
+                    }
+                }
+            });
+            app = mockApi.createServer();
+        });
+
+        describe('GET /_preset', () => {
+            it('should return available presets and no active preset initially', async () => {
+                const res = await request(app).get('/_preset');
+                expect(res.status).toBe(200);
+                expect(res.body.active).toBeNull();
+                expect(res.body.available).toEqual([
+                    'happy-path',
+                    'new-user',
+                    'error-mode',
+                    'slow-network',
+                    'user-errors'
+                ]);
+            });
+
+            it('should show active preset after activation', async () => {
+                await request(app)
+                    .post('/_preset')
+                    .send({ name: 'happy-path' });
+
+                const res = await request(app).get('/_preset');
+                expect(res.body.active).toBe('happy-path');
+            });
+        });
+
+        describe('POST /_preset', () => {
+            it('should activate a preset and update routes', async () => {
+                const res = await request(app)
+                    .post('/_preset')
+                    .send({ name: 'happy-path' });
+
+                expect(res.status).toBe(200);
+                expect(res.body.success).toBe(true);
+                expect(res.body.preset).toBe('happy-path');
+                expect(res.body.routesUpdated).toBe(3);
+
+                // Verify route was updated
+                const route = mockApi.routes.find(r => r.name === 'getUsers');
+                expect(route.testScenario).toBe('many');
+            });
+
+            it('should return 404 for unknown preset', async () => {
+                const res = await request(app)
+                    .post('/_preset')
+                    .send({ name: 'unknown-preset' });
+
+                expect(res.status).toBe(404);
+                expect(res.body.success).toBe(false);
+                expect(res.body.available).toBeDefined();
+            });
+
+            it('should reset to default when name is null', async () => {
+                // First activate a preset
+                await request(app)
+                    .post('/_preset')
+                    .send({ name: 'error-mode' });
+
+                // Verify preset is active
+                const route = mockApi.routes.find(r => r.name === 'getUsers');
+                expect(route.testScope).toBe('error');
+
+                // Reset to default
+                const res = await request(app)
+                    .post('/_preset')
+                    .send({ name: null });
+
+                expect(res.status).toBe(200);
+                expect(res.body.preset).toBe('default');
+
+                // Verify route is back to original
+                expect(route.testScope).toBe('success');
+            });
+
+            it('should reset to default when name is "default"', async () => {
+                await request(app)
+                    .post('/_preset')
+                    .send({ name: 'error-mode' });
+
+                const res = await request(app)
+                    .post('/_preset')
+                    .send({ name: 'default' });
+
+                expect(res.status).toBe(200);
+                expect(res.body.preset).toBe('default');
+
+                const presetRes = await request(app).get('/_preset');
+                expect(presetRes.body.active).toBeNull();
+            });
+        });
+
+        describe('Preset effects on routes', () => {
+            it('should change route scope via preset', async () => {
+                await request(app)
+                    .post('/_preset')
+                    .send({ name: 'error-mode' });
+
+                const res = await request(app).get('/api/users');
+                expect(res.status).toBe(500);
+            });
+
+            it('should change route scenario via preset', async () => {
+                await request(app)
+                    .post('/_preset')
+                    .send({ name: 'new-user' });
+
+                const res = await request(app).get('/api/users');
+                const body = JSON.parse(res.text);
+                expect(body.users).toEqual([]);
+            });
+
+            it('should apply latency via preset with wildcard', async () => {
+                await request(app)
+                    .post('/_preset')
+                    .send({ name: 'slow-network' });
+
+                // Verify all routes have latency set
+                for (const route of mockApi.routes) {
+                    expect(route.latency).toBe(100);
+                }
+            });
+        });
+
+        describe('Wildcard pattern matching', () => {
+            it('should match all routes with * pattern', async () => {
+                await request(app)
+                    .post('/_preset')
+                    .send({ name: 'slow-network' });
+
+                // All 4 routes should have latency
+                expect(mockApi.routes.every(r => r.latency === 100)).toBe(true);
+            });
+
+            it('should match routes by prefix with prefix* pattern', async () => {
+                await request(app)
+                    .post('/_preset')
+                    .send({ name: 'user-errors' });
+
+                // Only getUsers and getUser should be affected (start with 'getUser')
+                const getUsersRoute = mockApi.routes.find(r => r.name === 'getUsers');
+                const getUserRoute = mockApi.routes.find(r => r.name === 'getUser');
+                const createUserRoute = mockApi.routes.find(r => r.name === 'createUser');
+                const getOrdersRoute = mockApi.routes.find(r => r.name === 'getOrders');
+
+                expect(getUsersRoute.testScope).toBe('error');
+                expect(getUserRoute.testScope).toBe('error');
+                expect(createUserRoute.testScope).toBe('created'); // unchanged
+                expect(getOrdersRoute.testScope).toBe('success'); // unchanged
+            });
+        });
+
+        describe('Preset and reset interaction', () => {
+            it('should clear active preset on POST /_reset', async () => {
+                await request(app)
+                    .post('/_preset')
+                    .send({ name: 'happy-path' });
+
+                await request(app).post('/_reset');
+
+                const res = await request(app).get('/_preset');
+                expect(res.body.active).toBeNull();
+            });
+
+            it('should reset routes to original config on POST /_reset', async () => {
+                await request(app)
+                    .post('/_preset')
+                    .send({ name: 'error-mode' });
+
+                const routeBefore = mockApi.routes.find(r => r.name === 'getUsers');
+                expect(routeBefore.testScope).toBe('error');
+
+                await request(app).post('/_reset');
+
+                const routeAfter = mockApi.routes.find(r => r.name === 'getUsers');
+                expect(routeAfter.testScope).toBe('success');
+            });
+        });
+
+        describe('Empty presets configuration', () => {
+            it('should work without presets defined', async () => {
+                const apiWithoutPresets = mock({
+                    mockRoutes: [{
+                        name: 'test',
+                        mockRoute: '/api/test',
+                        method: 'GET',
+                        testScope: 'success',
+                        jsonTemplate: '{}'
+                    }]
+                });
+                const appWithoutPresets = apiWithoutPresets.createServer();
+
+                const res = await request(appWithoutPresets).get('/_preset');
+                expect(res.status).toBe(200);
+                expect(res.body.available).toEqual([]);
+            });
+        });
+    });
 });

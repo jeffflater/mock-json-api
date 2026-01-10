@@ -10,6 +10,7 @@ A Node.js module for creating mock REST APIs with scenario support, perfect for 
 - **Zero app code changes** - Just point your API URL to the mock server
 - **Real HTTP server** - True REST behavior, not browser interception
 - **Scenario switching** - Easily switch between test scenarios via query params or API
+- **Presets** - Define named configurations to switch entire experiences at once
 - **State persistence** - Optional JSON file storage simulating a database
 - **State reset** - Reset all state between test runs via `POST /_reset`
 - **CORS enabled** - Works out of the box with frontend dev servers
@@ -69,6 +70,7 @@ app.listen(3001, () => console.log('Mock API running on port 3001'));
 | `mockRoutes` | Array | Yes | Array of route configurations |
 | `jsonStore` | String | No | File path for data persistence |
 | `cors` | Boolean/Object | No | CORS settings (default: enabled) |
+| `presets` | Object | No | Named preset configurations (see Presets) |
 
 ### Route options
 
@@ -218,6 +220,115 @@ POST /_scenario
 { "name": "getUsers", "scenario": "empty" }
 ```
 
+## Presets
+
+Presets allow you to define named configurations that set multiple routes' scenarios and scopes at once. This is useful for quickly switching between different "experiences" like happy path, error states, or new user flows.
+
+### Defining Presets
+
+```javascript
+const mockApi = mock({
+    mockRoutes: [
+        { name: 'getUsers', mockRoute: '/api/users', method: 'GET', testScope: 'success', testScenario: 0, jsonTemplate: [...] },
+        { name: 'getUser', mockRoute: '/api/users/:id', method: 'GET', testScope: 'success', jsonTemplate: '...' },
+        { name: 'createUser', mockRoute: '/api/users', method: 'POST', testScope: 'created', jsonTemplate: '...' },
+        { name: 'getOrders', mockRoute: '/api/orders', method: 'GET', testScope: 'success', jsonTemplate: '...' }
+    ],
+    presets: {
+        'happy-path': {
+            'getUsers': { scenario: 'many', scope: 'success' },
+            'getUser': { scope: 'success' },
+            'createUser': { scope: 'created' }
+        },
+        'new-user': {
+            'getUsers': { scenario: 'empty' },
+            'getUser': { scope: 'notFound' }
+        },
+        'error-mode': {
+            'getUsers': { scope: 'error' },
+            'createUser': { scope: 'badRequest' }
+        },
+        'slow-network': {
+            '*': { latency: 2000 }  // Wildcard applies to all routes
+        }
+    }
+});
+```
+
+### Preset Route Configuration
+
+Each route in a preset can set:
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `scenario` | Number/String | The scenario to use for this route |
+| `scope` | String | The test scope (success, error, notFound, etc.) |
+| `latency` | Number/String | Response delay in ms |
+
+### Pattern Matching
+
+Presets support pattern matching for route names:
+
+| Pattern | Description | Example |
+|---------|-------------|---------|
+| `routeName` | Exact match | `'getUsers'` matches only `getUsers` |
+| `prefix*` | Prefix match | `'getUser*'` matches `getUsers`, `getUser`, `getUserById` |
+| `*` | All routes | `'*'` matches every route |
+
+### Activating a Preset
+
+**Via API:**
+```
+POST /_preset
+Content-Type: application/json
+
+{ "name": "happy-path" }
+```
+
+Response:
+```json
+{
+    "success": true,
+    "preset": "happy-path",
+    "message": "Preset 'happy-path' activated",
+    "routesUpdated": 3
+}
+```
+
+### Resetting to Default
+
+Send `null` or `"default"` as the name to reset all routes to their original configuration:
+
+```
+POST /_preset
+Content-Type: application/json
+
+{ "name": null }
+```
+
+or
+
+```
+POST /_preset
+Content-Type: application/json
+
+{ "name": "default" }
+```
+
+### Getting Available Presets
+
+```
+GET /_preset
+```
+
+Response:
+```json
+{
+    "active": "happy-path",
+    "available": ["happy-path", "new-user", "error-mode", "slow-network"]
+}
+```
+
 ## Request Body Access
 
 POST/PUT request bodies are automatically parsed:
@@ -354,6 +465,44 @@ test('handles server error gracefully', async () => {
 });
 ```
 
+### Using Presets in E2E Tests
+
+Presets make it easy to set up complex test scenarios with a single API call:
+
+```javascript
+describe('New user onboarding', () => {
+    beforeEach(async () => {
+        // Activate the new-user preset - sets up empty lists, not found states, etc.
+        await fetch('http://localhost:3001/_preset', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: 'new-user' })
+        });
+    });
+
+    test('shows onboarding flow for new users', async () => {
+        // All routes are now configured for new user experience
+        // Run your test...
+    });
+});
+
+describe('Error handling', () => {
+    beforeEach(async () => {
+        // Activate error-mode preset
+        await fetch('http://localhost:3001/_preset', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: 'error-mode' })
+        });
+    });
+
+    test('shows error states correctly', async () => {
+        // All routes are now configured to return errors
+        // Run your test...
+    });
+});
+```
+
 ## CORS Configuration
 
 CORS is enabled by default. To customize or disable:
@@ -407,6 +556,7 @@ Version 0.3.0 introduces several improvements while maintaining backward compati
 - Built-in body parsing
 - Express-style route parameters (`:id`)
 - `created` test scope (201 status)
+- **Presets** - Define named configurations to switch entire experiences at once via `POST /_preset`
 
 **Breaking changes:**
 - None - existing code continues to work
