@@ -1,0 +1,27 @@
+{
+  "name": "mock-json-api-mcp-server",
+  "version": "1.0.0",
+  "description": "MCP server for mock-json-api - manage mock REST APIs via Model Context Protocol",
+  "type": "module",
+  "main": "index.js",
+  "bin": {
+    "mock-json-api-mcp": "./index.js"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "test": "node --test"
+  },
+  "keywords": [
+    "mcp",
+    "mock",
+    "api",
+    "testing",
+    "model-context-protocol"
+  ],
+  "author": "Jeff Flater",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "mock-json-api": "file:.."
+  }
+}

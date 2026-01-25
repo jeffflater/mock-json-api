@@ -20,6 +20,7 @@ A Node.js module for creating mock REST APIs with scenario support, perfect for 
 - **Flexible routing** - Regex patterns or Express-style params (`:id`)
 - **Dummy data generation** - Uses [dummy-json](https://github.com/webroo/dummy-json) for realistic test data
 - **Latency simulation** - Add delays to simulate network conditions
+- **MCP Server** - Control mock APIs via AI assistants using Model Context Protocol
 
 ## Installation
 
@@ -682,6 +683,53 @@ Version 0.3.0 introduces several improvements while maintaining backward compati
 
 **Deprecated:**
 - Using `registerRoutes` directly without body parsing middleware
+
+## MCP Server
+
+An MCP (Model Context Protocol) server is included for controlling mock APIs via AI assistants like Claude.
+
+### Installation
+
+```bash
+cd mcp-server
+npm install
+```
+
+### Claude Desktop Configuration
+
+Add to your Claude Desktop config:
+
+```json
+{
+  "mcpServers": {
+    "mock-json-api": {
+      "command": "node",
+      "args": ["/path/to/mock-json-api/mcp-server/index.js"]
+    }
+  }
+}
+```
+
+### Available MCP Tools
+
+| Tool | Description |
+|------|-------------|
+| `create_mock_server` | Create a mock server with routes |
+| `start_server` | Start listening on a port |
+| `stop_server` | Stop a running server |
+| `list_servers` | List all server instances |
+| `get_server_info` | Get server details |
+| `add_route` | Add a route to a server |
+| `update_route` | Update route configuration |
+| `delete_route` | Delete a route |
+| `set_scenario` | Change route scenario/scope |
+| `list_presets` | List available presets |
+| `activate_preset` | Activate a preset |
+| `add_preset` | Add a new preset |
+| `reset_server` | Reset server state |
+| `test_route` | Test a route and get response |
+
+See [mcp-server/README.md](mcp-server/README.md) for full documentation.
 
 ## License
 
