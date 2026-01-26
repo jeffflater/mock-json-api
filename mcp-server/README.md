@@ -9,19 +9,35 @@ cd mcp-server
 npm install
 ```
 
-## Usage with Claude Desktop
+## Configuration
 
-Add to your Claude Desktop configuration (`~/.config/claude/claude_desktop_config.json` on Linux or `~/Library/Application Support/Claude/claude_desktop_config.json` on macOS):
+### Claude Desktop
+
+Add to your Claude Desktop configuration:
+
+**macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+**Linux**: `~/.config/claude/claude_desktop_config.json`
+**Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
 
 ```json
 {
   "mcpServers": {
     "mock-json-api": {
       "command": "node",
-      "args": ["/path/to/mock-json-api/mcp-server/index.js"]
+      "args": ["/absolute/path/to/mock-json-api/mcp-server/index.js"]
     }
   }
 }
+```
+
+Restart Claude Desktop after configuration.
+
+### Other MCP Clients
+
+The server uses stdio transport. Start with:
+
+```bash
+node /path/to/mcp-server/index.js
 ```
 
 ## Available Tools
@@ -31,10 +47,11 @@ Add to your Claude Desktop configuration (`~/.config/claude/claude_desktop_confi
 | Tool | Description |
 |------|-------------|
 | `create_mock_server` | Create a new mock API server with routes configuration |
-| `start_server` | Start a server listening on a port |
-| `stop_server` | Stop a running server |
+| `start_server` | Start a server listening on a port (1024-65535) |
+| `stop_server` | Stop a running server gracefully |
+| `destroy_server` | Stop and completely remove a server instance |
 | `list_servers` | List all server instances and their status |
-| `get_server_info` | Get detailed server information |
+| `get_server_info` | Get detailed server information including routes |
 | `reset_server` | Reset server state to initial configuration |
 
 ### Route Management
@@ -42,7 +59,7 @@ Add to your Claude Desktop configuration (`~/.config/claude/claude_desktop_confi
 | Tool | Description |
 |------|-------------|
 | `add_route` | Add a new route to an existing server |
-| `update_route` | Update an existing route configuration |
+| `update_route` | Update an existing route's configuration |
 | `delete_route` | Delete a route from a server |
 | `set_scenario` | Change a route's scenario and/or scope |
 
@@ -50,22 +67,21 @@ Add to your Claude Desktop configuration (`~/.config/claude/claude_desktop_confi
 
 | Tool | Description |
 |------|-------------|
-| `list_presets` | List available presets |
-| `activate_preset` | Activate a preset to switch multiple routes |
+| `list_presets` | List available presets for a server |
+| `activate_preset` | Activate a preset (use "default" to reset) |
 | `add_preset` | Add a new preset configuration |
 
 ### Testing
 
 | Tool | Description |
 |------|-------------|
-| `test_route` | Make a test request to a mock route |
+| `test_route` | Make a test HTTP request and return the response |
 
-## Example Usage
+## Usage Examples
 
 ### Create a Mock Server
 
 ```javascript
-// Via AI assistant
 create_mock_server({
   serverId: "my-api",
   routes: [
@@ -81,7 +97,7 @@ create_mock_server({
       mockRoute: "/api/users/:id",
       method: "GET",
       testScope: "success",
-      jsonTemplate: '{"id": {{request.params.id}}, "name": "{{firstName}}"}'
+      jsonTemplate: '{"id": "{{request.params.id}}", "name": "{{firstName}}"}'
     },
     {
       name: "createUser",
@@ -92,12 +108,8 @@ create_mock_server({
     }
   ],
   presets: {
-    "error-mode": {
-      "*": { "scope": "error" }
-    },
-    "slow-mode": {
-      "*": { "latency": "1000-3000" }
-    }
+    "error-mode": { "*": { "scope": "error" } },
+    "slow-mode": { "*": { "latency": "1000-3000" } }
   }
 })
 ```
@@ -120,7 +132,7 @@ test_route({
   path: "/api/users",
   method: "GET"
 })
-// Returns the mock response
+// Returns the mock response with status and body
 ```
 
 ### Switch to Error Mode
@@ -144,9 +156,22 @@ set_scenario({
 // getUsers now returns 404
 ```
 
-## Test Scopes
+### Add Route Dynamically
 
-The following scopes are available for simulating different HTTP responses:
+```javascript
+add_route({
+  serverId: "my-api",
+  route: {
+    name: "updateUser",
+    mockRoute: "/api/users/:id",
+    method: "PUT",
+    testScope: "success",
+    jsonTemplate: '{"id": "{{request.params.id}}", "updated": true}'
+  }
+})
+```
+
+## Test Scopes
 
 | Scope | HTTP Status | Description |
 |-------|-------------|-------------|
@@ -173,15 +198,69 @@ The mock server uses [dummy-json](https://github.com/webroo/dummy-json) for gene
 '{"users": [{{#repeat 5}}{"id": {{@index}}}{{/repeat}}]}'
 
 // Use request data
-'{"echo": "{{request.body.message}}", "userId": {{request.params.id}}}'
+'{"echo": "{{request.body.message}}", "userId": "{{request.params.id}}"}'
 ```
 
 ## Resources
 
-The MCP server also exposes resources that can be read:
+The MCP server exposes resources for each server:
 
-- `mock-server://{serverId}/config` - Server configuration and status
-- `mock-server://{serverId}/routes` - Route definitions
+| URI Pattern | Description |
+|-------------|-------------|
+| `mock-server://{serverId}/config` | Server configuration and status |
+| `mock-server://{serverId}/routes` | Route definitions |
+
+## Limits
+
+| Limit | Value |
+|-------|-------|
+| Maximum servers | 100 |
+| Maximum routes per server | 1000 |
+| Server ID length | 100 characters |
+| Server shutdown timeout | 30 seconds |
+| Valid port range | 1024-65535 |
+
+## Error Handling
+
+All tools return standardized responses:
+
+**Success:**
+```json
+{
+  "success": true,
+  "message": "Operation completed",
+  "...": "additional data"
+}
+```
+
+**Error:**
+```json
+{
+  "error": true,
+  "message": "Error description"
+}
+```
+
+## Graceful Shutdown
+
+The MCP server handles SIGTERM and SIGINT signals, gracefully stopping all running mock servers before exiting.
+
+## Troubleshooting
+
+### Server won't start
+- Check if the port is already in use
+- Ensure port is in valid range (1024-65535)
+- Use `list_servers` to check existing servers
+
+### Routes not matching
+- Parameterized routes (`:id`) are matched before regex routes
+- Route matching is case-insensitive
+- Use `get_server_info` to verify route configuration
+
+### MCP connection issues
+- Verify the path in claude_desktop_config.json is absolute
+- Ensure Node.js is installed and in PATH
+- Check server starts manually: `node index.js`
 
 ## License
 
