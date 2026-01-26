@@ -19,3 +19,8 @@ npm-debug.log*
 
 # Coverage
 coverage/
+
+# MCP server dependencies (users should npm install in mcp-server/)
+mcp-server/node_modules/
+mcp-server/package-lock.json
+mcp-server/__tests__/
