@@ -692,7 +692,14 @@ An MCP (Model Context Protocol) server is included for controlling mock APIs via
 
 ### Installation
 
+After installing mock-json-api, install the MCP server dependencies:
+
 ```bash
+# If installed globally or in node_modules
+cd node_modules/mock-json-api/mcp-server
+npm install
+
+# Or if cloned from GitHub
 cd mcp-server
 npm install
 ```
@@ -701,12 +708,16 @@ npm install
 
 Add to your Claude Desktop config:
 
+**macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+**Linux**: `~/.config/claude/claude_desktop_config.json`
+**Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+
 ```json
 {
   "mcpServers": {
     "mock-json-api": {
       "command": "node",
-      "args": ["/path/to/mock-json-api/mcp-server/index.js"]
+      "args": ["/absolute/path/to/mcp-server/index.js"]
     }
   }
 }

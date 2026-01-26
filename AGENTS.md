@@ -23,7 +23,7 @@ Or add to package.json:
 ```json
 {
   "dependencies": {
-    "mock-json-api": "^0.5.0"
+    "mock-json-api": "^0.6.0"
   }
 }
 ```
@@ -64,8 +64,17 @@ The MCP server allows AI assistants to create and control mock APIs dynamically.
 
 ### Step 1: Install MCP Server Dependencies
 
+After installing mock-json-api via npm, install the MCP server dependencies:
+
 ```bash
-cd /path/to/mock-json-api/mcp-server
+# Navigate to the MCP server directory
+cd node_modules/mock-json-api/mcp-server
+npm install
+```
+
+Or if working from a cloned repository:
+```bash
+cd mcp-server
 npm install
 ```
 
