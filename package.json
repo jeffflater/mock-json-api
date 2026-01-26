@@ -38,8 +38,9 @@
     "typescript": "^5.3.0"
   },
   "scripts": {
-    "test": "jest --testPathPattern=__tests__",
-    "test:watch": "jest --watch --testPathPattern=__tests__",
-    "test:types": "tsc types.test.ts --noEmit --esModuleInterop --skipLibCheck"
+    "test": "jest --testPathPattern=__tests__ --testPathIgnorePatterns=mcp-server",
+    "test:watch": "jest --watch --testPathPattern=__tests__ --testPathIgnorePatterns=mcp-server",
+    "test:types": "tsc types.test.ts --noEmit --esModuleInterop --skipLibCheck",
+    "test:mcp": "cd mcp-server && npm test"
   }
 }
