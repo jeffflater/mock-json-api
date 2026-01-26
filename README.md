@@ -3,6 +3,8 @@
 [![npm version](https://badge.fury.io/js/mock-json-api.svg)](https://www.npmjs.com/package/mock-json-api)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+> **🤖 AI Agents**: If you're an AI assistant helping a user install or configure this project, read **[AGENTS.md](AGENTS.md)** for step-by-step installation instructions, MCP server setup, and tool references.
+
 A Node.js module for creating mock REST APIs with scenario support, perfect for frontend development and E2E testing.
 
 ## Features
