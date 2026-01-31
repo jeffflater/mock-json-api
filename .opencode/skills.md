@@ -20,6 +20,97 @@
 
 ---
 
+## GOLDEN RULE: The Test Controls the Data
+
+> **The test controls the data, not the mock server maintaining state.**
+
+This is the most important principle for E2E testing with mock-json-api. **Never code state into the mock server.** Instead, the test explicitly switches scenarios to emulate whatever server-side state it needs.
+
+### Why This Matters
+
+- **100% control**: The test decides exactly what data the UI receives at every step
+- **No hidden dependencies**: Tests don't rely on previous requests "setting up" state
+- **Reproducible**: Every test run behaves identically
+- **Isolated**: Tests can run in parallel without interfering with each other
+
+### The Pattern: Switch Scenarios from the Test
+
+```typescript
+// In your E2E test (Playwright example)
+test('create item shows in list', async ({ page }) => {
+  // BEFORE the UI action: tell the mock what to return
+  await page.request.post('http://localhost:3001/_scenario', {
+    data: {
+      name: 'createItem',
+      scenario: 'success',
+      scope: 'created'
+    }
+  });
+
+  // NOW perform the UI action
+  await page.click('[data-testid="create-item-button"]');
+
+  // Switch scenario to show what the list looks like AFTER creation
+  await page.request.post('http://localhost:3001/_scenario', {
+    data: { name: 'listItems', scenario: 'after-create' }
+  });
+
+  // The mock returns the predefined data - no state needed
+  await expect(page.locator('.item-card')).toHaveCount(2);
+});
+```
+
+### Do NOT Do This
+
+```typescript
+// BAD: Expecting the mock to "remember" the POST and return it on GET
+await page.request.post('/api/items', { data: { name: 'New Item' } });
+await page.goto('/items'); // GET /api/items won't have the new item!
+```
+
+### DO This Instead
+
+```typescript
+// GOOD: Test explicitly controls what each endpoint returns
+// Step 1: Submit the form (mock returns the created item)
+await page.fill('[name="itemName"]', 'New Item');
+await page.click('[type="submit"]');
+
+// Step 2: Switch scenario to show what the list would look like AFTER creation
+await page.request.post('http://localhost:3001/_scenario', {
+  data: { name: 'listItems', scenario: 'after-create' }
+});
+
+// Step 3: Navigate to list (now shows the "after-create" scenario data)
+await page.goto('/items');
+await expect(page.locator('.item-card')).toHaveCount(2); // Includes new item
+```
+
+### When You Think You Need Server State
+
+If you find yourself wanting the mock to track state between requests, **stop and reconsider**:
+
+1. **Is the UI design correct?** Often if you think you need server-side state, the UI should handle optimistic updates, local state, or explicit re-fetches instead.
+
+2. **Can you test this with scenarios?** Define scenarios that represent "before" and "after" states, then switch between them explicitly in the test.
+
+3. **Is the test testing too much?** Consider breaking into smaller, focused tests that each test one state transition.
+
+### Scenario Naming Convention for State Transitions
+
+Use clear names that describe what state the scenario represents:
+
+```javascript
+jsonTemplate: [
+  { 'initial': '{"items": []}' },                     // Empty state
+  { 'after-create': '{"items": [{"id": 1, ...}]}' },  // After creating one
+  { 'after-update': '{"items": [{"id": 1, "name": "Updated"}]}' },
+  { 'after-delete': '{"items": []}' },                // Back to empty
+]
+```
+
+---
+
 ## Quick Start: Creating a Stateless Mock API
 
 ### Basic Structure
